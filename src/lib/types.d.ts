@@ -1,4 +1,7 @@
 import type { DBSchema } from "idb"
+import type { createOpenAI } from "@ai-sdk/openai"
+import type { createGoogleGenerativeAI } from "@ai-sdk/google"
+import type { createAnthropic } from "@ai-sdk/anthropic"
 
 export type Chat = {
   id: string
@@ -24,3 +27,13 @@ export interface ChatDB extends DBSchema {
     indexes: { chatId: string }
   }
 }
+
+// Model options are not exported by the SDKs, so we need to infer them from the parameters of the create functions
+type OpenAIModel = Parameters<ReturnType<typeof createOpenAI>>[0]
+type GoogleModel = Parameters<ReturnType<typeof createGoogleGenerativeAI>>[0]
+type AnthropicModel = Parameters<ReturnType<typeof createAnthropic>>[0]
+
+export type Model =
+  | { provider: "OpenAI"; name: OpenAIModel; title: string }
+  | { provider: "Google"; name: GoogleModel; title: string }
+  | { provider: "Anthropic"; name: AnthropicModel; title: string }
