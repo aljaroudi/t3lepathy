@@ -55,3 +55,14 @@ export async function addMessage(msg: Message) {
   await db.put("messages", msg)
   state.messages.push(msg)
 }
+
+export async function appendToMessage(id: string, content: string) {
+  const db = await dbPromise
+  const msg = await db.get("messages", id)
+  if (!msg) return false
+  msg.content += content
+  await db.put("messages", msg)
+  const local = state.messages.find((m) => m.id === id)
+  if (local) local.content += content
+  return true
+}
