@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { generateResponse, MODELS } from "./lib/ai"
+  import { MODELS } from "./lib/ai"
   import {
     addMessage,
     createChat,
     state as db,
-    appendToMessage,
     getChats,
     setCurrentChat,
   } from "./lib/db.svelte"
@@ -12,35 +11,24 @@
   getChats()
 
   // TODO: allow user to select model
-  const currentModel = MODELS[0]
+  const currentModel = MODELS.find((m) => m.provider === "Google")!
   // TODO: allow user to input api keys for each provider
   const apiKey = ""
 
   async function sendMessage(message: string) {
     if (!db.currentChatId) return alert("No chat selected")
     // User
-    addMessage({
-      id: crypto.randomUUID(),
-      chatId: db.currentChatId,
-      content: message,
-      role: "user",
-      date: new Date(),
-    })
-
-    // System
-    const messageId = crypto.randomUUID()
-    await addMessage({
-      id: messageId,
-      chatId: db.currentChatId!,
-      content: "",
-      role: "assistant",
-      date: new Date(),
-    })
-
-    const stream = generateResponse(message, currentModel, apiKey)
-    for await (const chunk of stream) {
-      await appendToMessage(messageId, chunk)
-    }
+    addMessage(
+      {
+        id: crypto.randomUUID(),
+        chatId: db.currentChatId,
+        content: message,
+        role: "user",
+        date: new Date(),
+      },
+      currentModel,
+      apiKey
+    )
   }
 </script>
 
