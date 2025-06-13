@@ -2,7 +2,7 @@ import { streamText } from "ai"
 import { createOpenAI } from "@ai-sdk/openai"
 import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { createAnthropic } from "@ai-sdk/anthropic"
-import type { Model } from "./types"
+import type { Model, Role } from "./types"
 
 function getModel(model: Model, apiKey: string) {
   switch (model.provider) {
@@ -15,13 +15,38 @@ function getModel(model: Model, apiKey: string) {
   }
 }
 
-export function generateResponse(prompt: string, model: Model, apiKey: string) {
+export function generateResponse({
+  messages,
+  model,
+  apiKey,
+}: {
+  messages: { content: string; role: Role }[]
+  model: Model
+  apiKey: string
+}) {
   const result = streamText({
     model: getModel(model, apiKey),
     system: "You are a friendly assistant!",
-    prompt: prompt,
+    messages,
   })
   return result.textStream
+}
+
+export function generateTitle({
+  messages,
+  model,
+  apiKey,
+}: {
+  messages: { content: string; role: Role }[]
+  model: Model
+  apiKey: string
+}) {
+  return streamText({
+    model: getModel(model, apiKey),
+    system:
+      "Generate a short, descriptive title (max 5 words) for this conversation based on the user's first message. The title should capture the main topic or purpose of the discussion.",
+    messages,
+  }).textStream
 }
 
 export const MODELS = [
