@@ -1,5 +1,6 @@
 import { openDB } from "idb"
-import type { Chat, Message, ChatDB } from "./types"
+import type { Chat, Message, ChatDB, Model } from "./types"
+import { generateResponse, generateTitle } from "./ai"
 
 const dbPromise = openDB<ChatDB>("chat-db", 1, {
   upgrade(db) {
@@ -17,20 +18,23 @@ export let state = $state({
 
 export async function getChats() {
   const db = await dbPromise
-  state.chats = await db.getAll("chats")
+  const chats = await db.getAll("chats")
+  state.chats = chats.sort((a, b) => a.title.localeCompare(b.title))
 }
 
 export async function setCurrentChat(chatId: string) {
   const db = await dbPromise
-  state.messages = await db.getAllFromIndex("messages", "chatId", chatId)
+  const messages = await db.getAllFromIndex("messages", "chatId", chatId)
+  state.messages = messages.sort((a, b) => a.date.getTime() - b.date.getTime())
   state.currentChatId = chatId
 }
 
 export async function createChat(title: string) {
   const db = await dbPromise
-  const chat: Chat = { id: crypto.randomUUID(), title }
+  const chat: Chat = { id: crypto.randomUUID(), title, date: new Date() }
   await db.put("chats", chat)
   state.chats.push(chat)
+  setCurrentChat(chat.id)
 }
 
 export async function renameChat(id: string, newTitle: string) {
@@ -50,19 +54,46 @@ export async function loadMessages(chatId: string) {
   state.messages = await db.getAllFromIndex("messages", "chatId", chatId)
 }
 
-export async function addMessage(msg: Message) {
+export async function addMessage(msg: Message, model: Model, apiKey: string) {
+  const shouldAutoRename = state.messages.length === 0
+  // 1. Add user message to db
   const db = await dbPromise
   await db.put("messages", msg)
   state.messages.push(msg)
-}
 
-export async function appendToMessage(id: string, content: string) {
-  const db = await dbPromise
-  const msg = await db.get("messages", id)
-  if (!msg) return false
-  msg.content += content
-  await db.put("messages", msg)
-  const local = state.messages.find((m) => m.id === id)
-  if (local) local.content += content
-  return true
+  // 2. Get all messages for context
+  const messages = state.messages.map((m) => ({
+    content: m.content,
+    role: m.role,
+  }))
+
+  // 3. Add a placeholder for the assistant message
+  const messageId = crypto.randomUUID()
+  const reply = {
+    id: messageId,
+    chatId: msg.chatId,
+    content: "",
+    role: "assistant" as const,
+    date: new Date(),
+  }
+  await db.put("messages", reply)
+  const msgIdx = state.messages.push(reply) - 1
+
+  // 4. Update the message with the response
+  const stream = generateResponse({ messages, model, apiKey })
+
+  for await (const chunk of stream) {
+    state.messages[msgIdx].content += chunk
+    await db.put("messages", { ...state.messages[msgIdx] })
+  }
+
+  // 5. If it's a new chat, auto-rename it
+  if (!shouldAutoRename) return
+  const chat = state.chats.find((c) => c.id === msg.chatId)
+  if (!chat) return
+  const titleStream = generateTitle({ messages, model, apiKey })
+  for await (const chunk of titleStream) {
+    chat.title = chunk
+    await db.put("chats", { ...chat })
+  }
 }
