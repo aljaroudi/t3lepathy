@@ -3,16 +3,19 @@ import type { createOpenAI } from "@ai-sdk/openai"
 import type { createGoogleGenerativeAI } from "@ai-sdk/google"
 import type { createAnthropic } from "@ai-sdk/anthropic"
 
+export type Role = "user" | "assistant"
+
 export type Chat = {
   id: string
   title: string
+  date: Date
 }
 
 export type Message = {
   id: string
   chatId: string
   content: string
-  role: "user" | "assistant"
+  role: Role
   date: Date
 }
 
