@@ -48,10 +48,10 @@
   <aside class="border-r border-gray-200 bg-gray-100 p-4 flex flex-col gap-2">
     <h1 class="text-2xl font-bold">T3lepathy</h1>
     <button
-      class="rounded-xl border p-2 bg-blue-500 text-white hover:bg-blue-600 cursor-pointer"
+      class="rounded-xl border p-2 bg-blue-500 text-white hover:bg-blue-600 cursor-pointer flex items-center justify-center"
       onclick={() => createChat("New chat")}
     >
-      +
+      <Plus />
     </button>
     <div class="flex flex-col gap-2 overflow-y-auto">
       {#each db.chats as chat}
