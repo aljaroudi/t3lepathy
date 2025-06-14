@@ -55,7 +55,7 @@
     <div class="flex flex-col gap-2 overflow-y-auto">
       {#each db.chats as chat}
         <button
-          class="flex rounded-xl border-2 p-2 aria-pressed:border-blue-500"
+          class="flex rounded-xl p-2 aria-pressed:bg-gray-200 aria-pressed:shadow-xs text-left truncate"
           aria-pressed={db.currentChatId === chat.id}
           onclick={() => setCurrentChat(chat.id)}
         >
