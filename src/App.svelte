@@ -214,3 +214,7 @@
     </div>
   </div>
 {/if}
+
+<svelte:window
+  onkeydown={(e) => e.key === "Escape" && showDialog && (showDialog = false)}
+/>
