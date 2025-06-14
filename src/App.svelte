@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { marked } from "marked"
   import { MODELS } from "./lib/ai"
   import {
     addMessage,
@@ -53,10 +54,12 @@
       {/each}
     </div>
   </aside>
-  <section class="flex flex-col gap-2 p-2">
+  <section class="flex flex-col gap-2 px-4 py-2">
     {#each db.messages as message}
-      <div class="rounded-xl border p-2">
-        <p>{message.content}</p>
+      <div
+        class="rounded-xl p-2 bg-gray-100 odd:bg-blue-500 odd:text-white odd:ml-auto odd:max-w-[80%]"
+      >
+        <p>{@html marked(message.content)}</p>
       </div>
     {/each}
     <form
