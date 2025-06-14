@@ -1,5 +1,5 @@
 import { openDB } from "idb"
-import type { Chat, Message, ChatDB, Model } from "./types"
+import type { Chat, Message, ChatDB, Model, Provider } from "./types"
 import { generateResponse, generateTitle } from "./ai"
 
 const dbPromise = openDB<ChatDB>("chat-db", 1, {
@@ -7,6 +7,7 @@ const dbPromise = openDB<ChatDB>("chat-db", 1, {
     db.createObjectStore("chats", { keyPath: "id" })
     const msgStore = db.createObjectStore("messages", { keyPath: "id" })
     msgStore.createIndex("chatId", "chatId")
+    db.createObjectStore("apiKeys", { keyPath: "provider" })
   },
 })
 
@@ -14,12 +15,20 @@ export let state = $state({
   chats: [] as Chat[],
   messages: [] as Message[],
   currentChatId: null as string | null,
+  apiKeys: {} as Record<Provider, string>,
 })
 
-export async function getChats() {
+export async function initDB() {
   const db = await dbPromise
+  // get chats
   const chats = await db.getAll("chats")
   state.chats = chats.sort((a, b) => b.date.getTime() - a.date.getTime())
+  // get keys
+  const keys = await db.getAll("apiKeys")
+  state.apiKeys = keys.reduce((acc, key) => {
+    acc[key.provider] = key.value
+    return acc
+  }, {} as Record<Provider, string>)
 }
 
 export async function setCurrentChat(chatId: string) {
@@ -96,4 +105,25 @@ export async function addMessage(msg: Message, model: Model, apiKey: string) {
     chat.title = chunk
     await db.put("chats", { ...chat })
   }
+}
+
+export async function setApiKey(provider: Provider, apiKey: string) {
+  const db = await dbPromise
+  await db.put("apiKeys", {
+    provider: provider,
+    value: apiKey,
+  })
+  state.apiKeys[provider] = apiKey
+}
+
+export async function getApiKey(provider: Provider) {
+  const db = await dbPromise
+  const apiKey = await db.get("apiKeys", provider)
+  return apiKey?.value
+}
+
+export async function deleteApiKey(provider: Provider) {
+  const db = await dbPromise
+  await db.delete("apiKeys", provider)
+  delete state.apiKeys[provider]
 }
