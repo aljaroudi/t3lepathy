@@ -19,7 +19,7 @@ export let state = $state({
 export async function getChats() {
   const db = await dbPromise
   const chats = await db.getAll("chats")
-  state.chats = chats.sort((a, b) => a.title.localeCompare(b.title))
+  state.chats = chats.sort((a, b) => b.date.getTime() - a.date.getTime())
 }
 
 export async function setCurrentChat(chatId: string) {
