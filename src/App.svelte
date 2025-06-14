@@ -76,16 +76,18 @@
     </button>
   </aside>
   <section
-    class="flex flex-col gap-2 px-4 py-2 mx-auto"
+    class="flex flex-col gap-2 px-4 py-2 mx-auto h-dvh"
     style="max-width: 80ch"
   >
-    {#each db.messages as message}
-      <div
-        class="rounded-xl p-2 bg-gray-100 odd:bg-blue-500 odd:text-white odd:ml-auto odd:max-w-[80%]"
-      >
-        <p>{@html marked(message.content)}</p>
-      </div>
-    {/each}
+    <div class="flex flex-col gap-2 overflow-y-auto">
+      {#each db.messages as message}
+        <div
+          class="rounded-xl p-2 bg-gray-100 odd:bg-blue-500 odd:text-white odd:ml-auto odd:max-w-[80%]"
+        >
+          <p>{@html marked(message.content)}</p>
+        </div>
+      {/each}
+    </div>
     <form
       class="mt-auto flex gap-2"
       onsubmit={(e) => {
