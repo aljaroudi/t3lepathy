@@ -13,6 +13,7 @@
   import type { Model, Provider } from "./lib/types"
   import Trash from "./lib/icons/Trash.svelte"
   import Plus from "./lib/icons/Plus.svelte"
+  import Gear from "./lib/icons/Gear.svelte"
 
   initDB()
 
@@ -64,10 +65,15 @@
       {/each}
     </div>
     <button
-      class="rounded-xl border p-2 bg-gray-300 hover:bg-gray-400 cursor-pointer mt-auto"
+      class="rounded-xl p-2 cursor-pointer mt-auto w-fit bg-gray-200 hover:bg-gray-300 shadow-xs"
+      aria-label="Settings"
+      title="Settings"
+      aria-pressed={showDialog}
+      style="border-radius: 50%"
+      aria-busy={Object.keys(db.apiKeys).length === 0}
       onclick={() => (showDialog = true)}
     >
-      Open Dialog
+      <Gear />
     </button>
   </aside>
   <section
