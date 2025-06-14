@@ -17,7 +17,6 @@
 
   initDB()
 
-  // TODO: allow user to select model
   let currentModel = $state<Model["name"]>("gemini-1.5-flash")
 
   let showDialog = $state(false)
@@ -137,7 +136,7 @@
       <p>This is a simple dialog popup. You can put any content here.</p>
       <form
         class="grid gap-2 bg-gray-100 p-2 rounded-xl border border-gray-200 shadow-xs items-center"
-        style="grid-template-columns: 20ch 2fr 1fr"
+        style="grid-template-columns: 12ch 2fr 1fr"
         onsubmit={(e) => {
           e.preventDefault()
           const formData = new FormData(e.currentTarget)
@@ -184,10 +183,20 @@
           {#each Object.entries(db.apiKeys) as [provider, key]}
             <div
               class="grid gap-2 items-center p-2 rounded-xl border border-gray-200 bg-gray-50"
-              style="grid-template-columns: 20ch 2fr 1fr"
+              style="grid-template-columns: 12ch 2fr 1fr"
             >
               <label for={`apiKey-${provider}`}>{provider}</label>
-              <p class="text-gray-500 text-sm">{key.slice(0, 20)}</p>
+              <p class="text-gray-500 text-sm truncate group">
+                <span class="group-hover:hidden">
+                  ••••••••••••••••••••••••••
+                </span>
+                <button
+                  class="hidden group-hover:inline cursor-pointer"
+                  onclick={() => navigator.clipboard.writeText(key)}
+                >
+                  Copy to clipboard
+                </button>
+              </p>
               <button
                 class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 cursor-pointer w-fit ml-auto"
                 onclick={() => deleteApiKey(provider as Provider)}
