@@ -8,16 +8,20 @@
     getChats,
     setCurrentChat,
   } from "./lib/db.svelte"
+  import type { Model } from "./lib/types"
 
   getChats()
 
   // TODO: allow user to select model
-  const currentModel = MODELS.find((m) => m.provider === "Google")!
+  let currentModel = $state<Model["name"]>("gemini-1.5-flash")
   // TODO: allow user to input api keys for each provider
   const apiKey = ""
 
   async function sendMessage(message: string) {
     if (!db.currentChatId) return alert("No chat selected")
+
+    const model = MODELS.find((m) => m.name === currentModel)
+    if (!model) return alert("Invalid model")
     // User
     addMessage(
       {
@@ -27,7 +31,7 @@
         role: "user",
         date: new Date(),
       },
-      currentModel,
+      model,
       apiKey
     )
   }
@@ -69,9 +73,15 @@
         const formData = new FormData(e.currentTarget)
         const message = formData.get("message") as string
         sendMessage(message.trim())
-        e.currentTarget.reset()
+        const messageInput = e.currentTarget.querySelector("input")
+        if (messageInput) messageInput.value = ""
       }}
     >
+      <select name="model" id="model" required bind:value={currentModel}>
+        {#each MODELS as model}
+          <option value={model.name}>{model.title}</option>
+        {/each}
+      </select>
       <input
         name="message"
         type="text"
