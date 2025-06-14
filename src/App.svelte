@@ -82,7 +82,7 @@
     <div class="flex flex-col gap-2 overflow-y-auto">
       {#each db.messages as message}
         <div
-          class="rounded-xl p-2 bg-gray-100 odd:bg-blue-500 odd:text-white odd:ml-auto odd:max-w-[80%]"
+          class="rounded-2xl px-4 py-2 odd:bg-gray-100 odd:ml-auto odd:max-w-[80%] odd:rounded-br-none"
         >
           <p>{@html marked(message.content)}</p>
         </div>
