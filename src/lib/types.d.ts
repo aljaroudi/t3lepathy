@@ -19,6 +19,11 @@ export type Message = {
   date: Date
 }
 
+type ApiKey = {
+  provider: Provider
+  value: string
+}
+
 export interface ChatDB extends DBSchema {
   chats: {
     key: string
@@ -28,6 +33,10 @@ export interface ChatDB extends DBSchema {
     key: string
     value: Message
     indexes: { chatId: string }
+  }
+  apiKeys: {
+    key: string
+    value: ApiKey
   }
 }
 
@@ -40,3 +49,5 @@ export type Model =
   | { provider: "OpenAI"; name: OpenAIModel; title: string }
   | { provider: "Google"; name: GoogleModel; title: string }
   | { provider: "Anthropic"; name: AnthropicModel; title: string }
+
+type Provider = Model["provider"]

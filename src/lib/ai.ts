@@ -2,7 +2,7 @@ import { streamText } from "ai"
 import { createOpenAI } from "@ai-sdk/openai"
 import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { createAnthropic } from "@ai-sdk/anthropic"
-import type { Model, Role } from "./types"
+import type { Model, Provider, Role } from "./types"
 
 function getModel(model: Model, apiKey: string) {
   switch (model.provider) {
@@ -76,3 +76,5 @@ export const MODELS = [
     name: "claude-3-5-sonnet-20240620",
   },
 ] satisfies Model[]
+
+export const PROVIDERS = ["Google", "OpenAI", "Anthropic"] satisfies Provider[]
