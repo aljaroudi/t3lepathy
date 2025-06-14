@@ -44,15 +44,15 @@
 </script>
 
 <main class="grid h-dvh w-full" style="grid-template-columns: 200px 1fr">
-  <aside class="border-r border-gray-200 bg-gray-100 p-4">
+  <aside class="border-r border-gray-200 bg-gray-100 p-4 flex flex-col gap-2">
     <h1 class="text-2xl font-bold">T3lepathy</h1>
-    <div class="flex flex-col gap-2 h-full">
-      <button
-        class="rounded-xl border p-2 bg-blue-500 text-white hover:bg-blue-600 cursor-pointer"
-        onclick={() => createChat("New chat")}
-      >
-        +
-      </button>
+    <button
+      class="rounded-xl border p-2 bg-blue-500 text-white hover:bg-blue-600 cursor-pointer"
+      onclick={() => createChat("New chat")}
+    >
+      +
+    </button>
+    <div class="flex flex-col gap-2 overflow-y-auto">
       {#each db.chats as chat}
         <button
           class="flex rounded-xl border-2 p-2 aria-pressed:border-blue-500"
@@ -62,15 +62,18 @@
           {chat.title}
         </button>
       {/each}
-      <button
-        class="rounded-xl border p-2 bg-gray-300 hover:bg-gray-400 cursor-pointer mt-auto"
-        onclick={() => (showDialog = true)}
-      >
-        Open Dialog
-      </button>
     </div>
+    <button
+      class="rounded-xl border p-2 bg-gray-300 hover:bg-gray-400 cursor-pointer mt-auto"
+      onclick={() => (showDialog = true)}
+    >
+      Open Dialog
+    </button>
   </aside>
-  <section class="flex flex-col gap-2 px-4 py-2">
+  <section
+    class="flex flex-col gap-2 px-4 py-2 mx-auto"
+    style="max-width: 80ch"
+  >
     {#each db.messages as message}
       <div
         class="rounded-xl p-2 bg-gray-100 odd:bg-blue-500 odd:text-white odd:ml-auto odd:max-w-[80%]"
