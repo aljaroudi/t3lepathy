@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { marked } from 'marked'
+	import { Marked } from 'marked'
+	import { markedHighlight } from 'marked-highlight'
+	import hljs from 'highlight.js'
+	import 'highlight.js/styles/github.css'
 	import { MODELS, PROVIDERS } from './lib/ai'
 	import {
 		addMessage,
@@ -41,6 +44,21 @@
 			apiKey
 		)
 	}
+
+	const marked = new Marked(
+		markedHighlight({
+			emptyLangClass: 'hljs',
+			langPrefix: 'hljs language-',
+			highlight(code, lang, info) {
+				const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+				return hljs.highlight(code, { language }).value
+			},
+		})
+	).setOptions({
+		pedantic: false,
+		gfm: true,
+		breaks: false,
+	})
 </script>
 
 <main class="grid h-dvh w-full" style="grid-template-columns: 200px 1fr">
@@ -81,11 +99,17 @@
 	>
 		<div class="flex flex-col gap-2 overflow-y-auto">
 			{#each db.messages as message}
-				<div
-					class="rounded-2xl px-4 py-2 odd:ml-auto odd:max-w-[80%] odd:rounded-br-none odd:bg-gray-100"
-				>
-					<p>{@html marked(message.content)}</p>
-				</div>
+				{#if message.role === 'user'}
+					<p
+						class="ml-auto max-w-[80%] rounded-2xl rounded-br-none bg-gray-100 px-4 py-2"
+					>
+						{@html marked.parse(message.content)}
+					</p>
+				{:else}
+					<p class="py-2">
+						{@html marked.parse(message.content)}
+					</p>
+				{/if}
 			{/each}
 		</div>
 		<form
