@@ -95,18 +95,19 @@
 	</aside>
 	<section
 		class="mx-auto flex h-dvh flex-col gap-2 px-4 py-2"
-		style="max-width: 80ch"
+		style="max-width: 100ch"
 	>
 		<div class="flex flex-col gap-2 overflow-y-auto">
 			{#each db.messages as message}
 				{#if message.role === 'user'}
 					<p
-						class="ml-auto max-w-[80%] rounded-2xl rounded-br-none bg-gray-100 px-4 py-2"
+						class="ml-auto rounded-2xl rounded-br-none bg-gray-100 px-4 py-2"
+						style="max-width: 80ch"
 					>
 						{@html marked.parse(message.content)}
 					</p>
 				{:else}
-					<p class="py-2">
+					<p style="max-width: 80ch">
 						{@html marked.parse(message.content)}
 					</p>
 				{/if}
