@@ -17,12 +17,13 @@
 	import Trash from './lib/icons/Trash.svelte'
 	import Plus from './lib/icons/Plus.svelte'
 	import Gear from './lib/icons/Gear.svelte'
+	import Panel from './lib/icons/panel.svelte'
 
 	initDB()
 
 	let currentModel = $state<Model['name']>('gemini-1.5-flash')
-
 	let showDialog = $state(false)
+	let showSidebar = $state(true)
 
 	async function sendMessage(message: string) {
 		const chatId = db.currentChatId || (await createChat('New chat'))
@@ -57,40 +58,74 @@
 	).setOptions({ pedantic: false, gfm: true, breaks: false })
 </script>
 
-<main class="grid h-dvh w-full" style="grid-template-columns: 200px 1fr">
-	<aside class="flex flex-col gap-2 border-r border-gray-200 bg-gray-100 p-4">
-		<h1 class="text-2xl font-bold">T3lepathy</h1>
-		<button
-			class="flex cursor-pointer items-center justify-center rounded-xl border bg-blue-500 p-2 text-white hover:bg-blue-600"
-			onclick={() => createChat('New chat')}
+<main
+	class="grid h-dvh w-full"
+	style="grid-template-columns: {showSidebar ? '200px' : '0px'} 1fr"
+>
+	{#if showSidebar}
+		<aside
+			class="flex flex-col gap-2 border-r border-gray-200 bg-gray-100 p-4 transition-all duration-300 ease-in-out"
+			class:hidden={!showSidebar}
 		>
-			<Plus />
-		</button>
-		<div class="flex flex-col gap-2 overflow-y-auto">
-			{#each db.chats as chat}
+			<div class="flex items-center gap-2 my-1">
 				<button
-					class="flex truncate rounded-xl p-2 text-left aria-pressed:bg-gray-200 aria-pressed:shadow-xs"
-					aria-pressed={db.currentChatId === chat.id}
-					onclick={() => setCurrentChat(chat.id)}
+					class="flex cursor-pointer items-center justify-center p-2 rounded-lg hover:bg-gray-200 transition-all duration-300 ease-in-out size-10"
+					style="transform: rotate(180deg)"
+					onclick={() => (showSidebar = false)}
 				>
-					{chat.title}
+					<Panel />
 				</button>
-			{/each}
-		</div>
-		<button
-			class="mt-auto w-fit cursor-pointer rounded-xl bg-gray-200 p-2 shadow-xs hover:bg-gray-300"
-			aria-label="Settings"
-			title="Settings"
-			aria-pressed={showDialog}
-			style="border-radius: 50%"
-			aria-busy={Object.keys(db.apiKeys).length === 0}
-			onclick={() => (showDialog = true)}
+			</div>
+			<button
+				class="flex cursor-pointer items-center justify-center rounded-xl border bg-blue-500 p-2 text-white hover:bg-blue-600"
+				onclick={() => createChat('New chat')}
+			>
+				<Plus />
+			</button>
+			<div class="flex flex-col gap-2 overflow-y-auto">
+				{#each db.chats as chat}
+					<button
+						class="flex truncate rounded-xl p-2 text-left aria-pressed:bg-gray-200 aria-pressed:shadow-xs"
+						aria-pressed={db.currentChatId === chat.id}
+						onclick={() => setCurrentChat(chat.id)}
+					>
+						{chat.title}
+					</button>
+				{/each}
+			</div>
+			<button
+				class="mt-auto w-fit cursor-pointer rounded-xl bg-gray-200 p-2 shadow-xs hover:bg-gray-300"
+				aria-label="Settings"
+				title="Settings"
+				aria-pressed={showDialog}
+				style="border-radius: 50%"
+				aria-busy={Object.keys(db.apiKeys).length === 0}
+				onclick={() => (showDialog = true)}
+			>
+				<Gear />
+			</button>
+		</aside>
+	{:else}
+		<div
+			class="flex gap-2 backdrop-blur-sm bg-gray-200/50 items-center h-fit rounded-lg w-fit my-4 mx-3 p-1"
 		>
-			<Gear />
-		</button>
-	</aside>
+			<button
+				class="flex cursor-pointer items-center justify-center rounded-lg p-2 hover:bg-gray-200 transition-all duration-300 ease-in-out size-10"
+				style="transform: rotate(180deg)"
+				onclick={() => (showSidebar = true)}
+			>
+				<Panel />
+			</button>
+			<button
+				class="flex cursor-pointer items-center justify-center rounded-lg p-2 hover:bg-gray-200 transition-all duration-300 ease-in-out size-10"
+				onclick={() => createChat('New chat')}
+			>
+				<Plus />
+			</button>
+		</div>
+	{/if}
 	<section
-		class="mx-auto flex h-dvh flex-col gap-2 px-4 py-2"
+		class="mx-auto flex h-dvh flex-col gap-2 px-4"
 		style="max-width: 100ch"
 	>
 		<div class="flex flex-col gap-2 overflow-y-auto">
@@ -110,7 +145,7 @@
 			{/each}
 		</div>
 		<form
-			class="mt-auto flex gap-2"
+			class="mt-auto flex gap-2 p-4"
 			onsubmit={e => {
 				e.preventDefault()
 				const formData = new FormData(e.currentTarget)
@@ -239,5 +274,8 @@
 {/if}
 
 <svelte:window
-	onkeydown={e => e.key === 'Escape' && showDialog && (showDialog = false)}
+	onkeydown={e => {
+		if (e.key === 'Escape' && showDialog) showDialog = false
+		if (e.key === 'b' && e.metaKey) showSidebar = !showSidebar
+	}}
 />
