@@ -1,1 +1,7 @@
 @import 'tailwindcss';
+
+
+code.hljs {
+  @apply shadow-xs rounded-xl bg-gray-50;
+  margin-block: 0.5rem;
+}

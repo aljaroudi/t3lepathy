@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { marked } from 'marked'
+	import { Marked } from 'marked'
+	import { markedHighlight } from 'marked-highlight'
+	import hljs from 'highlight.js'
+	import 'highlight.js/styles/github.css'
 	import { MODELS, PROVIDERS } from './lib/ai'
 	import {
 		addMessage,
@@ -22,7 +25,7 @@
 	let showDialog = $state(false)
 
 	async function sendMessage(message: string) {
-		if (!db.currentChatId) return alert('No chat selected')
+		const chatId = db.currentChatId || (await createChat('New chat'))
 
 		const model = MODELS.find(m => m.name === currentModel)
 		if (!model) return alert('Invalid model')
@@ -32,7 +35,7 @@
 		addMessage(
 			{
 				id: crypto.randomUUID(),
-				chatId: db.currentChatId,
+				chatId,
 				content: message,
 				role: 'user',
 				date: new Date(),
@@ -41,6 +44,17 @@
 			apiKey
 		)
 	}
+
+	const marked = new Marked(
+		markedHighlight({
+			emptyLangClass: 'hljs',
+			langPrefix: 'hljs language-',
+			highlight(code, lang) {
+				const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+				return hljs.highlight(code, { language }).value
+			},
+		})
+	).setOptions({ pedantic: false, gfm: true, breaks: false })
 </script>
 
 <main class="grid h-dvh w-full" style="grid-template-columns: 200px 1fr">
@@ -77,15 +91,22 @@
 	</aside>
 	<section
 		class="mx-auto flex h-dvh flex-col gap-2 px-4 py-2"
-		style="max-width: 80ch"
+		style="max-width: 100ch"
 	>
 		<div class="flex flex-col gap-2 overflow-y-auto">
 			{#each db.messages as message}
-				<div
-					class="rounded-2xl px-4 py-2 odd:ml-auto odd:max-w-[80%] odd:rounded-br-none odd:bg-gray-100"
-				>
-					<p>{@html marked(message.content)}</p>
-				</div>
+				{#if message.role === 'user'}
+					<p
+						class="ml-auto rounded-2xl rounded-br-none bg-gray-100 px-4 py-2"
+						style="max-width: 80ch"
+					>
+						{@html marked.parse(message.content)}
+					</p>
+				{:else}
+					<p style="max-width: 80ch">
+						{@html marked.parse(message.content)}
+					</p>
+				{/if}
 			{/each}
 		</div>
 		<form

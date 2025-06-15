@@ -47,6 +47,7 @@ export async function createChat(title: string) {
 	await db.put('chats', chat)
 	state.chats.push(chat)
 	setCurrentChat(chat.id)
+	return chat.id
 }
 
 export async function renameChat(id: string, newTitle: string) {
