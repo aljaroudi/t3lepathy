@@ -25,7 +25,7 @@
 	let showDialog = $state(false)
 
 	async function sendMessage(message: string) {
-		if (!db.currentChatId) return alert('No chat selected')
+		const chatId = db.currentChatId || (await createChat('New chat'))
 
 		const model = MODELS.find(m => m.name === currentModel)
 		if (!model) return alert('Invalid model')
@@ -35,7 +35,7 @@
 		addMessage(
 			{
 				id: crypto.randomUUID(),
-				chatId: db.currentChatId,
+				chatId,
 				content: message,
 				role: 'user',
 				date: new Date(),
@@ -49,16 +49,12 @@
 		markedHighlight({
 			emptyLangClass: 'hljs',
 			langPrefix: 'hljs language-',
-			highlight(code, lang, info) {
+			highlight(code, lang) {
 				const language = hljs.getLanguage(lang) ? lang : 'plaintext'
 				return hljs.highlight(code, { language }).value
 			},
 		})
-	).setOptions({
-		pedantic: false,
-		gfm: true,
-		breaks: false,
-	})
+	).setOptions({ pedantic: false, gfm: true, breaks: false })
 </script>
 
 <main class="grid h-dvh w-full" style="grid-template-columns: 200px 1fr">
