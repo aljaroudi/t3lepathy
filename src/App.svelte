@@ -18,12 +18,15 @@
 	import Plus from './lib/icons/Plus.svelte'
 	import Gear from './lib/icons/Gear.svelte'
 	import Panel from './lib/icons/panel.svelte'
+	import Search from './lib/icons/search.svelte'
 
 	initDB()
 
 	let currentModel = $state<Model['name']>('gemini-1.5-flash')
 	let showDialog = $state(false)
 	let showSidebar = $state(true)
+	let showSearch = $state(false)
+	let searchQuery = $state('')
 
 	async function sendMessage(message: string) {
 		const chatId = db.currentChatId || (await createChat('New chat'))
@@ -59,14 +62,11 @@
 </script>
 
 <main
-	class="grid h-dvh w-full"
-	style="grid-template-columns: {showSidebar ? '200px' : '0px'} 1fr"
+	class="grid h-dvh w-full transition-all duration-300 ease-in-out"
+	style="grid-template-columns: {showSidebar ? '240px' : '0px'} 1fr"
 >
 	{#if showSidebar}
-		<aside
-			class="flex flex-col gap-2 border-r border-gray-200 bg-gray-100 p-4 transition-all duration-300 ease-in-out"
-			class:hidden={!showSidebar}
-		>
+		<aside class="flex flex-col gap-2 border-r border-gray-200 bg-gray-100 p-4">
 			<div class="flex items-center gap-2 my-1">
 				<button
 					class="flex cursor-pointer items-center justify-center p-2 rounded-lg hover:bg-gray-200 transition-all duration-300 ease-in-out size-10"
@@ -75,6 +75,8 @@
 				>
 					<Panel />
 				</button>
+
+				<h1 class="text-xl font-bold font-mono">T3lepathy</h1>
 			</div>
 			<button
 				class="flex cursor-pointer items-center justify-center rounded-xl border bg-blue-500 p-2 text-white hover:bg-blue-600"
@@ -155,7 +157,13 @@
 				if (messageInput) messageInput.value = ''
 			}}
 		>
-			<select name="model" id="model" required bind:value={currentModel}>
+			<select
+				name="model"
+				id="model"
+				required
+				bind:value={currentModel}
+				class="w-fit rounded-lg border border-gray-200 bg-white p-2"
+			>
 				{#each PROVIDERS as provider}
 					{@const keyIsSet = db.apiKeys[provider]?.length}
 					<optgroup label={keyIsSet ? provider : `${provider} (no key)`}>
@@ -170,12 +178,12 @@
 			<input
 				name="message"
 				type="text"
-				class="flex-1 rounded-xl border p-2"
+				class="flex-1 rounded-lg border p-2"
 				placeholder="Type your message..."
 				minLength={1}
 				required
 			/>
-			<button type="submit" class="rounded-xl border p-2"> Send </button>
+			<button type="submit" class="rounded-lg border p-2">Send</button>
 		</form>
 	</section>
 </main>
@@ -271,11 +279,85 @@
 			</div>
 		</div>
 	</div>
+{:else if showSearch}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs"
+	>
+		<div class="relative min-w-[60ch] rounded-xl bg-white shadow-lg">
+			<div class="flex gap-2 border-b border-gray-200 mx-2 items-center">
+				<p class="text-lg flex items-center gap-2 text-gray-500">
+					<Search />
+					<span class="text-gray-200">/</span>
+					<Plus />
+				</p>
+				<button
+					class="absolute top-2 right-2 text-gray-500 hover:text-black"
+					style="transform: rotate(45deg)"
+					onclick={() => (showSearch = false)}
+				>
+					<Plus />
+				</button>
+				<!-- svelte-ignore a11y_autofocus -->
+				<input
+					type="text"
+					name="search"
+					id="search"
+					placeholder="Search..."
+					class="w-full p-2 outline-none"
+					bind:value={searchQuery}
+					autofocus
+				/>
+			</div>
+			<div class="flex flex-col gap-2">
+				{#if searchQuery.length}
+					{@const filteredMessages = db.chats
+						.filter(chat =>
+							chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+						)
+						.slice(0, 5)}
+					{#if filteredMessages.length}
+						{#each filteredMessages as chat}
+							<button
+								class="rounded-xl py-1 px-2 text-left"
+								onclick={() => {
+									setCurrentChat(chat.id)
+									showSearch = false
+								}}
+							>
+								{chat.title}
+							</button>
+						{/each}
+					{:else}
+						<p class="text-gray-500">No messages found</p>
+					{/if}
+				{:else}
+					{#each db.chats.slice(0, 5) as chat}
+						<button
+							class="rounded-xl py-1 px-2 text-left"
+							onclick={() => {
+								setCurrentChat(chat.id)
+								showSearch = false
+							}}
+						>
+							{chat.title}
+						</button>
+					{/each}
+				{/if}
+			</div>
+		</div>
+	</div>
 {/if}
 
 <svelte:window
 	onkeydown={e => {
-		if (e.key === 'Escape' && showDialog) showDialog = false
-		if (e.key === 'b' && e.metaKey) showSidebar = !showSidebar
+		if (e.key === 'Escape') {
+			showDialog = showSearch = false
+		} else if (e.key === 'b' && e.metaKey) {
+			showSidebar = !showSidebar
+		} else if (e.key === 'k' && e.metaKey) {
+			showSearch = !showSearch
+		} else if (e.key === ',' && e.metaKey && e.shiftKey) {
+			showDialog = !showDialog
+		}
 	}}
 />
