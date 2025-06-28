@@ -19,6 +19,7 @@
 	import Gear from './lib/icons/Gear.svelte'
 	import Panel from './lib/icons/panel.svelte'
 	import Search from './lib/icons/search.svelte'
+	import { convertImageToBase64 } from './lib/storage'
 
 	initDB()
 
@@ -28,19 +29,21 @@
 	let showSearch = $state(false)
 	let searchQuery = $state('')
 
-	async function sendMessage(message: string) {
+	async function sendMessage(message: string, files: File[]) {
 		const chatId = db.currentChatId || (await createChat('New chat'))
 
 		const model = MODELS.find(m => m.name === currentModel)
 		if (!model) return alert('Invalid model')
 		const apiKey = db.apiKeys[model.provider]
 		if (!apiKey) return alert('No API key found for this model')
+
+		const images = await Promise.all(files.map(convertImageToBase64))
 		// User
 		addMessage(
 			{
 				id: crypto.randomUUID(),
 				chatId,
-				content: message,
+				content: [{ type: 'text' as const, text: message }, ...images],
 				role: 'user',
 				date: new Date(),
 			},
@@ -67,16 +70,16 @@
 >
 	{#if showSidebar}
 		<aside class="flex flex-col gap-2 border-r border-gray-200 bg-gray-100 p-4">
-			<div class="flex items-center gap-2 my-1">
+			<div class="my-1 flex items-center gap-2">
 				<button
-					class="flex cursor-pointer items-center justify-center p-2 rounded-lg hover:bg-gray-200 transition-all duration-300 ease-in-out size-10"
+					class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
 					style="transform: rotate(180deg)"
 					onclick={() => (showSidebar = false)}
 				>
 					<Panel />
 				</button>
 
-				<h1 class="text-xl font-bold font-mono">T3lepathy</h1>
+				<h1 class="font-mono text-xl font-bold">T3lepathy</h1>
 			</div>
 			<button
 				class="flex cursor-pointer items-center justify-center rounded-xl border bg-blue-500 p-2 text-white hover:bg-blue-600"
@@ -109,17 +112,17 @@
 		</aside>
 	{:else}
 		<div
-			class="flex gap-2 backdrop-blur-sm bg-gray-200/50 items-center h-fit rounded-lg w-fit my-4 mx-3 p-1"
+			class="mx-3 my-4 flex h-fit w-fit items-center gap-2 rounded-lg bg-gray-200/50 p-1 backdrop-blur-sm"
 		>
 			<button
-				class="flex cursor-pointer items-center justify-center rounded-lg p-2 hover:bg-gray-200 transition-all duration-300 ease-in-out size-10"
+				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
 				style="transform: rotate(180deg)"
 				onclick={() => (showSidebar = true)}
 			>
 				<Panel />
 			</button>
 			<button
-				class="flex cursor-pointer items-center justify-center rounded-lg p-2 hover:bg-gray-200 transition-all duration-300 ease-in-out size-10"
+				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
 				onclick={() => createChat('New chat')}
 			>
 				<Plus />
@@ -130,15 +133,31 @@
 		class="mx-auto flex h-dvh flex-col gap-2 px-4"
 		style="max-width: 100ch"
 	>
-		<div class="flex flex-col gap-2 overflow-y-auto">
+		<div class="flex flex-1 flex-col gap-2 overflow-y-auto">
 			{#each db.messages as message}
 				{#if message.role === 'user'}
-					<p
-						class="ml-auto rounded-2xl rounded-br-none bg-gray-100 px-4 py-2"
+					<div
+						class="my-2 ml-auto rounded-2xl rounded-br-none bg-gray-100 px-4 py-2"
 						style="max-width: 80ch"
 					>
-						{@html marked.parse(message.content)}
-					</p>
+						{#each message.content.filter(part => part.type === 'text') as part}
+							{@html marked.parse(part.text)}
+						{/each}
+						{#if message.content.some(part => part.type === 'image')}
+							{@const images = message.content.filter(
+								part => part.type === 'image'
+							)}
+							<div class="flex gap-2">
+								{#each images as image}
+									<img
+										src={image.image}
+										alt="Message attachment"
+										class="size-20 rounded-lg object-cover"
+									/>
+								{/each}
+							</div>
+						{/if}
+					</div>
 				{:else}
 					<p style="max-width: 80ch">
 						{@html marked.parse(message.content)}
@@ -152,7 +171,11 @@
 				e.preventDefault()
 				const formData = new FormData(e.currentTarget)
 				const message = formData.get('message') as string
-				sendMessage(message.trim())
+				const files = formData
+					.getAll('file')
+					.filter(f => f instanceof File && f.name !== '') as File[]
+				if (!message.trim()) return
+				sendMessage(message.trim(), files)
 				const messageInput = e.currentTarget.querySelector('input')
 				if (messageInput) messageInput.value = ''
 			}}
@@ -178,12 +201,31 @@
 			<input
 				name="message"
 				type="text"
-				class="flex-1 rounded-lg border p-2"
+				class="flex-1 rounded-lg border border-gray-200 p-2"
 				placeholder="Type your message..."
 				minLength={1}
 				required
 			/>
-			<button type="submit" class="rounded-lg border p-2">Send</button>
+
+			<button
+				type="button"
+				class="rounded-lg border border-gray-200 p-2 hover:bg-gray-200"
+				onclick={() => document.getElementById('file')?.click()}
+			>
+				📎
+			</button>
+			<input
+				type="file"
+				name="file"
+				id="file"
+				accept="image/*"
+				class="hidden"
+				multiple
+			/>
+
+			<button type="submit" class="rounded-lg border border-gray-200 p-2">
+				Send
+			</button>
 		</form>
 	</section>
 </main>
@@ -284,8 +326,8 @@
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs"
 	>
 		<div class="relative min-w-[60ch] rounded-xl bg-white shadow-lg">
-			<div class="flex gap-2 border-b border-gray-200 mx-2 items-center">
-				<p class="text-lg flex items-center gap-2 text-gray-500">
+			<div class="mx-2 flex items-center gap-2 border-b border-gray-200">
+				<p class="flex items-center gap-2 text-lg text-gray-500">
 					<Search />
 					<span class="text-gray-200">/</span>
 					<Plus />
@@ -318,7 +360,7 @@
 					{#if filteredMessages.length}
 						{#each filteredMessages as chat}
 							<button
-								class="rounded-xl py-1 px-2 text-left"
+								class="rounded-xl px-2 py-1 text-left"
 								onclick={() => {
 									setCurrentChat(chat.id)
 									showSearch = false
@@ -333,7 +375,7 @@
 				{:else}
 					{#each db.chats.slice(0, 5) as chat}
 						<button
-							class="rounded-xl py-1 px-2 text-left"
+							class="rounded-xl px-2 py-1 text-left"
 							onclick={() => {
 								setCurrentChat(chat.id)
 								showSearch = false

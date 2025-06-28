@@ -67,18 +67,24 @@ export async function loadMessages(chatId: string) {
 	state.messages = await db.getAllFromIndex('messages', 'chatId', chatId)
 }
 
-export async function addMessage(msg: Message, model: Model, apiKey: string) {
+export async function addMessage(
+	/** Message where role is 'user' */
+	msg: Extract<Message, { role: 'user' }>,
+	model: Model,
+	apiKey: string
+) {
 	const shouldAutoRename = state.messages.length === 0
-	// 1. Add user message to db
 	const db = await dbPromise
+	// 1. Add user message to db
 	await db.put('messages', msg)
 	state.messages.push(msg)
 
 	// 2. Get all messages for context
-	const messages = state.messages.map(m => ({
-		content: m.content,
-		role: m.role,
-	}))
+	const chatHistory = state.messages.map(m =>
+		m.role === 'assistant'
+			? { role: 'assistant' as const, content: m.content }
+			: { role: 'user' as const, content: m.content }
+	)
 
 	// 3. Add a placeholder for the assistant message
 	const messageId = crypto.randomUUID()
@@ -88,24 +94,28 @@ export async function addMessage(msg: Message, model: Model, apiKey: string) {
 		content: '',
 		role: 'assistant' as const,
 		date: new Date(),
-	}
+	} satisfies Message
 	await db.put('messages', reply)
 	const msgIdx = state.messages.push(reply) - 1
 
 	// 4. Update the message with the response
-	const stream = generateResponse({ messages, model, apiKey })
+	const stream = generateResponse({ messages: chatHistory, model, apiKey })
 
 	for await (const chunk of stream) {
+		if (state.messages[msgIdx].role === 'user') continue
 		state.messages[msgIdx].content += chunk
 		await db.put('messages', { ...state.messages[msgIdx] })
 	}
 
 	// 5. If it's a new chat, auto-rename it
 	if (!shouldAutoRename) return
+	const firstMessage = msg.content.find(m => m.type === 'text')?.text
+	if (!firstMessage) return
+
 	const chat = state.chats.find(c => c.id === msg.chatId)
 	if (!chat) return
-	chat.title = ''
-	const titleStream = generateTitle({ messages, model, apiKey })
+	chat.title = '...'
+	const titleStream = generateTitle({ message: firstMessage, model, apiKey })
 	for await (const chunk of titleStream) {
 		chat.title += chunk
 		await db.put('chats', { ...chat })
