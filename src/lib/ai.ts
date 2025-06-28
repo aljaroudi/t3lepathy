@@ -2,7 +2,7 @@ import { streamText } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createAnthropic } from '@ai-sdk/anthropic'
-import type { Model, Provider, Role } from './types'
+import type { ContextMessage, Model, Provider } from './types'
 
 function getModel(model: Model, apiKey: string) {
 	switch (model.provider) {
@@ -20,7 +20,7 @@ export function generateResponse({
 	model,
 	apiKey,
 }: {
-	messages: { content: string; role: Role }[]
+	messages: ContextMessage[]
 	model: Model
 	apiKey: string
 }) {
@@ -33,11 +33,11 @@ export function generateResponse({
 }
 
 export function generateTitle({
-	messages,
+	message,
 	model,
 	apiKey,
 }: {
-	messages: { content: string; role: Role }[]
+	message: string
 	model: Model
 	apiKey: string
 }) {
@@ -45,7 +45,7 @@ export function generateTitle({
 		model: getModel(model, apiKey),
 		system:
 			"Generate a short, descriptive title (max 5 words) for this conversation based on the user's first message. The title should capture the main topic or purpose of the discussion.",
-		messages,
+		messages: [{ role: 'user', content: message }],
 	}).textStream
 }
 
