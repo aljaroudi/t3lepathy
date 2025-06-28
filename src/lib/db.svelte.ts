@@ -67,7 +67,12 @@ export async function loadMessages(chatId: string) {
 	state.messages = await db.getAllFromIndex('messages', 'chatId', chatId)
 }
 
-export async function addMessage(msg: Extract<Message, { role: 'user' }>, model: Model, apiKey: string) {
+export async function addMessage(
+	/** Message where role is 'user' */
+	msg: Extract<Message, { role: 'user' }>,
+	model: Model,
+	apiKey: string
+) {
 	const shouldAutoRename = state.messages.length === 0
 	const db = await dbPromise
 	// 1. Add user message to db
@@ -75,7 +80,7 @@ export async function addMessage(msg: Extract<Message, { role: 'user' }>, model:
 	state.messages.push(msg)
 
 	// 2. Get all messages for context
-	const chatHistory = state.messages.map(m => 
+	const chatHistory = state.messages.map(m =>
 		m.role === 'assistant'
 			? { role: 'assistant' as const, content: m.content }
 			: { role: 'user' as const, content: m.content }

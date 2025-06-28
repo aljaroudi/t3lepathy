@@ -10,11 +10,14 @@ export type Chat = {
 	date: Date
 }
 
-export type UserContextMessage = { role: 'user'; content: Array<TextPart | ImagePart> }
+export type UserContextMessage = {
+	role: 'user'
+	content: Array<TextPart | ImagePart>
+}
 export type LLMContextMessage = { role: 'assistant'; content: string }
 export type ContextMessage = UserContextMessage | LLMContextMessage
 
-type MessageBase = { id: string, chatId: string, date: Date }
+type MessageBase = { id: string; chatId: string; date: Date }
 type UserMessage = ContextMessage & MessageBase
 type LLMMessage = ContextMessage & MessageBase
 export type Message = UserMessage | LLMMessage
