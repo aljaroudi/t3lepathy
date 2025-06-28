@@ -2,8 +2,7 @@ import type { DBSchema } from 'idb'
 import type { createOpenAI } from '@ai-sdk/openai'
 import type { createGoogleGenerativeAI } from '@ai-sdk/google'
 import type { createAnthropic } from '@ai-sdk/anthropic'
-
-export type Role = 'user' | 'assistant'
+import type { ImagePart, TextPart } from 'ai'
 
 export type Chat = {
 	id: string
@@ -11,13 +10,14 @@ export type Chat = {
 	date: Date
 }
 
-export type Message = {
-	id: string
-	chatId: string
-	content: string
-	role: Role
-	date: Date
-}
+export type UserContextMessage = { role: 'user'; content: Array<TextPart | ImagePart> }
+export type LLMContextMessage = { role: 'assistant'; content: string }
+export type ContextMessage = UserContextMessage | LLMContextMessage
+
+type MessageBase = { id: string, chatId: string, date: Date }
+type UserMessage = ContextMessage & MessageBase
+type LLMMessage = ContextMessage & MessageBase
+export type Message = UserMessage | LLMMessage
 
 type ApiKey = {
 	provider: Provider
