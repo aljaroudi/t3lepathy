@@ -19,7 +19,7 @@
 	import Gear from './lib/icons/Gear.svelte'
 	import Panel from './lib/icons/panel.svelte'
 	import Search from './lib/icons/search.svelte'
-	import { convertImageToBase64 } from './lib/storage'
+	import { convertFileToBase64 } from './lib/storage'
 
 	initDB()
 
@@ -36,14 +36,15 @@
 		if (!model) return alert('Invalid model')
 		const apiKey = db.apiKeys[model.provider]
 		if (!apiKey) return alert('No API key found for this model')
-
-		const images = await Promise.all(files.map(convertImageToBase64))
 		// User
 		addMessage(
 			{
 				id: crypto.randomUUID(),
 				chatId,
-				content: [{ type: 'text' as const, text: message }, ...images],
+				content: [
+					{ type: 'text' as const, text: message },
+					...(await Promise.all(files.map(convertFileToBase64))),
+				],
 				role: 'user',
 				date: new Date(),
 			},
@@ -156,6 +157,16 @@
 									/>
 								{/each}
 							</div>
+						{:else if message.content.some(part => part.type === 'file')}
+							<div class="flex gap-2">
+								{#each message.content.filter(part => part.type === 'file') as file}
+									<p
+										class="rounded-full bg-cyan-700 px-2 py-1 text-sm text-white"
+									>
+										{file.filename || `${file.mimeType} file`}
+									</p>
+								{/each}
+							</div>
 						{/if}
 					</div>
 				{:else}
@@ -214,14 +225,7 @@
 			>
 				📎
 			</button>
-			<input
-				type="file"
-				name="file"
-				id="file"
-				accept="image/*"
-				class="hidden"
-				multiple
-			/>
+			<input type="file" name="file" id="file" class="hidden" multiple />
 
 			<button type="submit" class="rounded-lg border border-gray-200 p-2">
 				Send
