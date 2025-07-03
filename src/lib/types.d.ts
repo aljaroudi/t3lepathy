@@ -2,7 +2,7 @@ import type { DBSchema } from 'idb'
 import type { createOpenAI } from '@ai-sdk/openai'
 import type { createGoogleGenerativeAI } from '@ai-sdk/google'
 import type { createAnthropic } from '@ai-sdk/anthropic'
-import type { ImagePart, TextPart } from 'ai'
+import type { FilePart, ImagePart, TextPart } from 'ai'
 
 export type Chat = {
 	id: string
@@ -12,7 +12,7 @@ export type Chat = {
 
 export type UserContextMessage = {
 	role: 'user'
-	content: Array<TextPart | ImagePart>
+	content: Array<TextPart | ImagePart | FilePart>
 }
 export type LLMContextMessage = { role: 'assistant'; content: string }
 export type ContextMessage = UserContextMessage | LLMContextMessage
