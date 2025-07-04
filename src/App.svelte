@@ -148,7 +148,7 @@
 		</div>
 		<!-- Floating input form -->
 		<form
-			class="absolute right-2 bottom-2 left-2 z-20 mx-auto flex w-full max-w-[60ch] flex-col gap-2 rounded-xl border border-slate-200 bg-white/80 p-2 shadow-xs backdrop-blur dark:bg-slate-800/80"
+			class="absolute right-2 bottom-2 left-2 z-20 mx-auto flex w-full max-w-[60ch] flex-col gap-2 rounded-xl border border-slate-200 bg-white/80 p-2 shadow-xs backdrop-blur dark:border-slate-200/20 dark:bg-slate-800/80"
 			style="height: 120px; max-width: calc(100% - 1rem)"
 			onsubmit={e => {
 				e.preventDefault()
