@@ -2,7 +2,7 @@
 	import { Marked } from 'marked'
 	import { markedHighlight } from 'marked-highlight'
 	import hljs from 'highlight.js'
-	import 'highlight.js/styles/github.css'
+	import 'highlight.js/styles/atom-one-dark.min.css'
 	import { MODELS, PROVIDERS } from './lib/ai'
 	import {
 		addMessage,
@@ -15,11 +15,12 @@
 	} from './lib/db.svelte'
 	import type { Model, Provider } from './lib/types'
 	import Trash from './lib/icons/Trash.svelte'
+	import Panel from './lib/icons/Panel.svelte'
+	import Search from './lib/icons/Search.svelte'
+	import { convertFileToBase64 } from './lib/storage'
+	import Sidebar from './lib/ui/Sidebar.svelte'
 	import Plus from './lib/icons/Plus.svelte'
-	import Gear from './lib/icons/Gear.svelte'
-	import Panel from './lib/icons/panel.svelte'
-	import Search from './lib/icons/search.svelte'
-	import { convertImageToBase64 } from './lib/storage'
+	import Arrow from './lib/icons/Arrow.svelte'
 
 	initDB()
 
@@ -36,14 +37,15 @@
 		if (!model) return alert('Invalid model')
 		const apiKey = db.apiKeys[model.provider]
 		if (!apiKey) return alert('No API key found for this model')
-
-		const images = await Promise.all(files.map(convertImageToBase64))
 		// User
 		addMessage(
 			{
 				id: crypto.randomUUID(),
 				chatId,
-				content: [{ type: 'text' as const, text: message }, ...images],
+				content: [
+					{ type: 'text' as const, text: message },
+					...(await Promise.all(files.map(convertFileToBase64))),
+				],
 				role: 'user',
 				date: new Date(),
 			},
@@ -65,54 +67,20 @@
 </script>
 
 <main
-	class="grid h-dvh w-full transition-all duration-300 ease-in-out"
+	class="grid h-dvh w-full transition-all duration-300 ease-in-out dark:bg-slate-800 dark:text-slate-100"
 	style="grid-template-columns: {showSidebar ? '240px' : '0px'} 1fr"
 >
 	{#if showSidebar}
-		<aside class="flex flex-col gap-2 border-r border-gray-200 bg-gray-100 p-4">
-			<div class="my-1 flex items-center gap-2">
-				<button
-					class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
-					style="transform: rotate(180deg)"
-					onclick={() => (showSidebar = false)}
-				>
-					<Panel />
-				</button>
-
-				<h1 class="font-mono text-xl font-bold">T3lepathy</h1>
-			</div>
-			<button
-				class="flex cursor-pointer items-center justify-center rounded-xl border bg-blue-500 p-2 text-white hover:bg-blue-600"
-				onclick={() => createChat('New chat')}
-			>
-				<Plus />
-			</button>
-			<div class="flex flex-col gap-2 overflow-y-auto">
-				{#each db.chats as chat}
-					<button
-						class="flex truncate rounded-xl p-2 text-left aria-pressed:bg-gray-200 aria-pressed:shadow-xs"
-						aria-pressed={db.currentChatId === chat.id}
-						onclick={() => setCurrentChat(chat.id)}
-					>
-						{chat.title}
-					</button>
-				{/each}
-			</div>
-			<button
-				class="mt-auto w-fit cursor-pointer rounded-xl bg-gray-200 p-2 shadow-xs hover:bg-gray-300"
-				aria-label="Settings"
-				title="Settings"
-				aria-pressed={showDialog}
-				style="border-radius: 50%"
-				aria-busy={Object.keys(db.apiKeys).length === 0}
-				onclick={() => (showDialog = true)}
-			>
-				<Gear />
-			</button>
-		</aside>
+		<Sidebar
+			onClose={() => (showSidebar = false)}
+			onCreateChat={() => createChat('New chat')}
+			onSelectChat={chatId => setCurrentChat(chatId)}
+			{showDialog}
+			onShowDialog={() => (showDialog = true)}
+		/>
 	{:else}
 		<div
-			class="mx-3 my-4 flex h-fit w-fit items-center gap-2 rounded-lg bg-gray-200/50 p-1 backdrop-blur-sm"
+			class="mx-3 my-4 flex h-fit w-fit items-center gap-2 rounded-lg bg-slate-200/50 p-1 backdrop-blur-sm"
 		>
 			<button
 				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
@@ -130,22 +98,25 @@
 		</div>
 	{/if}
 	<section
-		class="mx-auto flex h-dvh flex-col gap-2 px-4"
-		style="max-width: 100ch"
+		class="mx-auto flex h-dvh w-full flex-col gap-2 px-4"
+		style="max-width: 80ch"
 	>
 		<div class="flex flex-1 flex-col gap-2 overflow-y-auto">
 			{#each db.messages as message}
 				{#if message.role === 'user'}
 					<div
-						class="my-2 ml-auto rounded-2xl rounded-br-none bg-gray-100 px-4 py-2"
-						style="max-width: 80ch"
+						class="my-2 ml-auto rounded-2xl rounded-br-none bg-zinc-100 px-4 py-2 text-slate-800 shadow-xs"
+						style="max-width: 60ch"
 					>
 						{#each message.content.filter(part => part.type === 'text') as part}
 							{@html marked.parse(part.text)}
 						{/each}
-						{#if message.content.some(part => part.type === 'image')}
+						{#if message.content.some(part => part.type !== 'text')}
 							{@const images = message.content.filter(
 								part => part.type === 'image'
+							)}
+							{@const files = message.content.filter(
+								part => part.type === 'file'
 							)}
 							<div class="flex gap-2">
 								{#each images as image}
@@ -154,6 +125,13 @@
 										alt="Message attachment"
 										class="size-20 rounded-lg object-cover"
 									/>
+								{/each}
+								{#each files as file}
+									<p
+										class="rounded-full bg-cyan-700 px-3 py-1 text-sm text-white"
+									>
+										{file.filename || `${file.mimeType} file`}
+									</p>
 								{/each}
 							</div>
 						{/if}
@@ -166,7 +144,7 @@
 			{/each}
 		</div>
 		<form
-			class="mt-auto flex gap-2 p-4"
+			class="m-2 mt-auto flex flex-col gap-2 rounded-xl border border-slate-200 shadow-xs"
 			onsubmit={e => {
 				e.preventDefault()
 				const formData = new FormData(e.currentTarget)
@@ -180,52 +158,50 @@
 				if (messageInput) messageInput.value = ''
 			}}
 		>
-			<select
-				name="model"
-				id="model"
-				required
-				bind:value={currentModel}
-				class="w-fit rounded-lg border border-gray-200 bg-white p-2"
-			>
-				{#each PROVIDERS as provider}
-					{@const keyIsSet = db.apiKeys[provider]?.length}
-					<optgroup label={keyIsSet ? provider : `${provider} (no key)`}>
-						{#each MODELS.filter(model => model.provider === provider) as model}
-							<option value={model.name} disabled={!keyIsSet}>
-								{model.title}
-							</option>
-						{/each}
-					</optgroup>
-				{/each}
-			</select>
 			<input
 				name="message"
 				type="text"
-				class="flex-1 rounded-lg border border-gray-200 p-2"
+				class="p-2 dark:bg-slate-200 dark:text-slate-800"
 				placeholder="Type your message..."
 				minLength={1}
 				required
+				autocomplete="off"
+				spellcheck="false"
 			/>
-
-			<button
-				type="button"
-				class="rounded-lg border border-gray-200 p-2 hover:bg-gray-200"
-				onclick={() => document.getElementById('file')?.click()}
-			>
-				📎
-			</button>
-			<input
-				type="file"
-				name="file"
-				id="file"
-				accept="image/*"
-				class="hidden"
-				multiple
-			/>
-
-			<button type="submit" class="rounded-lg border border-gray-200 p-2">
-				Send
-			</button>
+			<div class="flex gap-2 px-2 py-1">
+				<select
+					name="model"
+					id="model"
+					required
+					bind:value={currentModel}
+					class="w-fit rounded-lg border border-gray-200 bg-white p-2 dark:bg-slate-100 dark:text-slate-800"
+				>
+					{#each PROVIDERS as provider}
+						{@const keyIsSet = db.apiKeys[provider]?.length}
+						<optgroup label={keyIsSet ? provider : `${provider} (no key)`}>
+							{#each MODELS.filter(model => model.provider === provider) as model}
+								<option value={model.name} disabled={!keyIsSet}>
+									{model.title}
+								</option>
+							{/each}
+						</optgroup>
+					{/each}
+				</select>
+				<button
+					type="button"
+					class="rounded-full p-2 hover:bg-gray-200 dark:border-slate-200 dark:bg-slate-200 dark:hover:bg-slate-200"
+					onclick={() => document.getElementById('file')?.click()}
+				>
+					📎
+				</button>
+				<input type="file" name="file" id="file" class="hidden" multiple />
+				<button
+					type="submit"
+					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-cyan-700 text-lg text-white"
+				>
+					<Arrow />
+				</button>
+			</div>
 		</form>
 	</section>
 </main>

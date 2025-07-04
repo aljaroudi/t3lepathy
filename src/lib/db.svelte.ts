@@ -114,7 +114,7 @@ export async function addMessage(
 
 	const chat = state.chats.find(c => c.id === msg.chatId)
 	if (!chat) return
-	chat.title = '...'
+	chat.title = ''
 	const titleStream = generateTitle({ message: firstMessage, model, apiKey })
 	for await (const chunk of titleStream) {
 		chat.title += chunk
