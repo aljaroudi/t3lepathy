@@ -1,5 +1,12 @@
 import { openDB } from 'idb'
-import type { Chat, Message, ChatDB, Model, Provider } from './types'
+import type {
+	Chat,
+	Message,
+	ChatDB,
+	Model,
+	Provider,
+	ResponseLength,
+} from './types'
 import { generateResponse, generateTitle } from './ai'
 
 const dbPromise = openDB<ChatDB>('chat-db', 1, {
@@ -71,7 +78,8 @@ export async function addMessage(
 	/** Message where role is 'user' */
 	msg: Extract<Message, { role: 'user' }>,
 	model: Model,
-	apiKey: string
+	apiKey: string,
+	responseLength: ResponseLength
 ) {
 	const shouldAutoRename = state.messages.length === 0
 	const db = await dbPromise
@@ -99,7 +107,12 @@ export async function addMessage(
 	const msgIdx = state.messages.push(reply) - 1
 
 	// 4. Update the message with the response
-	const stream = generateResponse({ messages: chatHistory, model, apiKey })
+	const stream = generateResponse({
+		messages: chatHistory,
+		model,
+		apiKey,
+		maxWords: LENGTH_IN_SENTENCES[responseLength],
+	})
 
 	for await (const chunk of stream) {
 		if (state.messages[msgIdx].role === 'user') continue
@@ -141,4 +154,10 @@ export async function deleteApiKey(provider: Provider) {
 	const db = await dbPromise
 	await db.delete('apiKeys', provider)
 	delete state.apiKeys[provider]
+}
+
+const LENGTH_IN_SENTENCES: Record<ResponseLength, number | null> = {
+	short: 10,
+	medium: 100,
+	open: null,
 }
