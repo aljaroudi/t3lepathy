@@ -239,12 +239,10 @@
 							name={`apiKey-${provider}`}
 							id={`apiKey-${provider}`}
 							placeholder={`${provider} API key`}
-							class="col-span-3 rounded-lg border border-gray-200 bg-white p-2 dark:bg-slate-100 dark:text-slate-800"
-							aria-invalid={!isValidApiKey(provider, db.apiKeys[provider])}
-							aria-describedby={`apiKey-${provider}-error`}
-							title={`Invalid API key for ${provider}`}
+							class="col-span-3 rounded-lg border border-gray-200 bg-white p-2 aria-disabled:border-rose-500 dark:bg-slate-100 dark:text-slate-800"
+							aria-disabled={!isValidApiKey(provider, db.apiKeys[provider])}
 							value={db.apiKeys[provider] || ''}
-							oninput={e => db.setApiKey(provider, e.currentTarget.value)}
+							oninput={e => (db.apiKeys[provider] = e.currentTarget.value)}
 						/>
 					</div>
 				{/each}
@@ -333,3 +331,10 @@
 		}
 	}}
 />
+
+<style>
+	[aria-invalid='true'] {
+		border-color: red;
+		background-color: red;
+	}
+</style>
