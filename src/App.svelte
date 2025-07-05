@@ -4,15 +4,8 @@
 	import hljs from 'highlight.js'
 	import 'highlight.js/styles/atom-one-dark.min.css'
 	import { MODELS, PROVIDERS } from './lib/ai'
-	import {
-		addMessage,
-		createChat,
-		state as db,
-		initDB,
-		setApiKey,
-		setCurrentChat,
-	} from './lib/db.svelte'
-	import type { Model, ResponseLength } from './lib/types'
+	import { state as db } from './lib/db.svelte'
+	import type { Model } from './lib/types'
 	import Panel from './lib/icons/Panel.svelte'
 	import Search from './lib/icons/Search.svelte'
 	import { convertFileToBase64 } from './lib/storage'
@@ -21,24 +14,23 @@
 	import Arrow from './lib/icons/Arrow.svelte'
 	import { isValidApiKey } from './lib/validate'
 
-	initDB()
+	void db.init()
 
 	let currentModel = $state<Model['name']>('gemini-1.5-flash')
 	let showDialog = $state(false)
 	let showSidebar = $state(true)
 	let showSearch = $state(false)
 	let searchQuery = $state('')
-	let responseLength = $state<ResponseLength>('medium')
 
 	async function sendMessage(message: string, files: File[]) {
-		const chatId = db.currentChatId || (await createChat('New chat'))
+		const chatId = db.currentChatId || (await db.addChat('New chat'))
 
 		const model = MODELS.find(m => m.name === currentModel)
 		if (!model) return alert('Invalid model')
 		const apiKey = db.apiKeys[model.provider]
 		if (!apiKey) return alert('No API key found for this model')
 		// User
-		addMessage(
+		db.addMessage(
 			{
 				id: crypto.randomUUID(),
 				chatId,
@@ -51,7 +43,7 @@
 			},
 			model,
 			apiKey,
-			responseLength
+			db.responseLength
 		)
 	}
 
@@ -74,8 +66,8 @@
 	{#if showSidebar}
 		<Sidebar
 			onClose={() => (showSidebar = false)}
-			onCreateChat={() => createChat('New chat')}
-			onSelectChat={chatId => setCurrentChat(chatId)}
+			onCreateChat={() => db.addChat('New chat')}
+			onSelectChat={chatId => db.setCurrentChat(chatId)}
 			{showDialog}
 			onShowDialog={() => (showDialog = true)}
 		/>
@@ -92,7 +84,7 @@
 			</button>
 			<button
 				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
-				onclick={() => createChat('New chat')}
+				onclick={() => db.addChat('New chat')}
 			>
 				<Plus />
 			</button>
@@ -197,7 +189,7 @@
 					name="response_length"
 					id="response_length"
 					required
-					bind:value={responseLength}
+					bind:value={db.responseLength}
 					class="w-fit rounded-lg border border-gray-200 bg-white p-2 dark:bg-slate-100 dark:text-slate-800"
 				>
 					<option disabled>Response length</option>
@@ -251,7 +243,8 @@
 							aria-invalid={!isValidApiKey(provider, db.apiKeys[provider])}
 							aria-describedby={`apiKey-${provider}-error`}
 							title={`Invalid API key for ${provider}`}
-							oninput={e => setApiKey(provider, e.currentTarget.value)}
+							value={db.apiKeys[provider] || ''}
+							oninput={e => db.setApiKey(provider, e.currentTarget.value)}
 						/>
 					</div>
 				{/each}
@@ -299,7 +292,7 @@
 							<button
 								class="rounded-xl px-2 py-1 text-left"
 								onclick={() => {
-									setCurrentChat(chat.id)
+									db.setCurrentChat(chat.id)
 									showSearch = false
 								}}
 							>
@@ -314,7 +307,7 @@
 						<button
 							class="rounded-xl px-2 py-1 text-left"
 							onclick={() => {
-								setCurrentChat(chat.id)
+								db.setCurrentChat(chat.id)
 								showSearch = false
 							}}
 						>
