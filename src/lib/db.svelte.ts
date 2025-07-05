@@ -14,7 +14,6 @@ const dbPromise = openDB<ChatDB>('chat-db', 1, {
 		db.createObjectStore('chats', { keyPath: 'id' })
 		const msgStore = db.createObjectStore('messages', { keyPath: 'id' })
 		msgStore.createIndex('chatId', 'chatId')
-		db.createObjectStore('apiKeys', { keyPath: 'provider' })
 	},
 })
 
@@ -22,7 +21,15 @@ export let state = $state({
 	chats: [] as Chat[],
 	messages: [] as Message[],
 	currentChatId: null as string | null,
-	apiKeys: {} as Record<Provider, string>,
+
+	get apiKeys(): Record<Provider, string> {
+		const keys = localStorage.getItem('apiKeys')
+		if (!keys) return {} as Record<Provider, string>
+		return JSON.parse(keys) as Record<Provider, string>
+	},
+	set apiKeys(value: Record<Provider, string>) {
+		localStorage.setItem('apiKeys', JSON.stringify(value))
+	},
 
 	get responseLength(): ResponseLength {
 		return (
@@ -139,27 +146,6 @@ export let state = $state({
 			chat.title += chunk
 			await db.put('chats', { ...chat })
 		}
-	},
-
-	async setApiKey(provider: Provider, apiKey: string) {
-		const db = await dbPromise
-		await db.put('apiKeys', {
-			provider: provider,
-			value: apiKey,
-		})
-		this.apiKeys[provider] = apiKey
-	},
-
-	async getApiKey(provider: Provider) {
-		const db = await dbPromise
-		const apiKey = await db.get('apiKeys', provider)
-		return apiKey?.value
-	},
-
-	async deleteApiKey(provider: Provider) {
-		const db = await dbPromise
-		await db.delete('apiKeys', provider)
-		delete this.apiKeys[provider]
 	},
 })
 
