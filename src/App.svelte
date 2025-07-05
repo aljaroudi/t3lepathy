@@ -274,7 +274,7 @@
 					name="search"
 					id="search"
 					placeholder="Search..."
-					class="w-full p-2 outline-none"
+					class="w-full border-none p-2 outline-none focus:ring-0"
 					bind:value={searchQuery}
 					autofocus
 				/>
