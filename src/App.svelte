@@ -4,25 +4,17 @@
 	import hljs from 'highlight.js'
 	import 'highlight.js/styles/atom-one-dark.min.css'
 	import { MODELS, PROVIDERS } from './lib/ai'
-	import {
-		addMessage,
-		createChat,
-		state as db,
-		deleteApiKey,
-		initDB,
-		setApiKey,
-		setCurrentChat,
-	} from './lib/db.svelte'
-	import type { Model, Provider } from './lib/types'
-	import Trash from './lib/icons/Trash.svelte'
+	import { state as db } from './lib/db.svelte'
+	import type { Model } from './lib/types'
 	import Panel from './lib/icons/Panel.svelte'
 	import Search from './lib/icons/Search.svelte'
 	import { convertFileToBase64 } from './lib/storage'
 	import Sidebar from './lib/ui/Sidebar.svelte'
 	import Plus from './lib/icons/Plus.svelte'
 	import Arrow from './lib/icons/Arrow.svelte'
+	import { isValidApiKey } from './lib/validate'
 
-	initDB()
+	void db.init()
 
 	let currentModel = $state<Model['name']>('gemini-1.5-flash')
 	let showDialog = $state(false)
@@ -31,14 +23,14 @@
 	let searchQuery = $state('')
 
 	async function sendMessage(message: string, files: File[]) {
-		const chatId = db.currentChatId || (await createChat('New chat'))
+		const chatId = db.currentChatId || (await db.addChat('New chat'))
 
 		const model = MODELS.find(m => m.name === currentModel)
 		if (!model) return alert('Invalid model')
 		const apiKey = db.apiKeys[model.provider]
 		if (!apiKey) return alert('No API key found for this model')
 		// User
-		addMessage(
+		db.addMessage(
 			{
 				id: crypto.randomUUID(),
 				chatId,
@@ -50,7 +42,8 @@
 				date: new Date(),
 			},
 			model,
-			apiKey
+			apiKey,
+			db.responseLength
 		)
 	}
 
@@ -73,14 +66,15 @@
 	{#if showSidebar}
 		<Sidebar
 			onClose={() => (showSidebar = false)}
-			onCreateChat={() => createChat('New chat')}
-			onSelectChat={chatId => setCurrentChat(chatId)}
+			onCreateChat={() => db.addChat('New chat')}
+			onSelectChat={chatId => db.setCurrentChat(chatId)}
 			{showDialog}
 			onShowDialog={() => (showDialog = true)}
 		/>
 	{:else}
 		<div
 			class="mx-3 my-4 flex h-fit w-fit items-center gap-2 rounded-lg bg-slate-200/50 p-1 backdrop-blur-sm"
+			style="z-index: 10"
 		>
 			<button
 				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
@@ -91,17 +85,20 @@
 			</button>
 			<button
 				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
-				onclick={() => createChat('New chat')}
+				onclick={() => db.addChat('New chat')}
 			>
 				<Plus />
 			</button>
 		</div>
 	{/if}
 	<section
-		class="mx-auto flex h-dvh w-full flex-col gap-2 px-4"
+		class="relative mx-auto flex h-dvh w-full flex-col gap-2 px-4"
 		style="max-width: 80ch"
 	>
-		<div class="flex flex-1 flex-col gap-2 overflow-y-auto">
+		<div
+			class="flex flex-1 flex-col gap-2 overflow-y-auto"
+			style="scroll-padding-bottom: 120px; padding-bottom: calc(120px + 1rem);"
+		>
 			{#each db.messages as message}
 				{#if message.role === 'user'}
 					<div
@@ -143,8 +140,10 @@
 				{/if}
 			{/each}
 		</div>
+		<!-- Floating input form -->
 		<form
-			class="m-2 mt-auto flex flex-col gap-2 rounded-xl border border-slate-200 shadow-xs"
+			class="absolute right-2 bottom-2 left-2 z-20 mx-auto flex w-full max-w-[60ch] flex-col gap-2 rounded-xl border border-slate-200 bg-white/80 p-2 shadow-xs backdrop-blur dark:border-slate-200/20 dark:bg-slate-800/80"
+			style="height: 120px; max-width: calc(100% - 1rem)"
 			onsubmit={e => {
 				e.preventDefault()
 				const formData = new FormData(e.currentTarget)
@@ -161,7 +160,7 @@
 			<input
 				name="message"
 				type="text"
-				class="p-2 dark:bg-slate-200 dark:text-slate-800"
+				class="border-none bg-transparent p-2 outline-none focus:ring-0 dark:text-slate-200"
 				placeholder="Type your message..."
 				minLength={1}
 				required
@@ -186,6 +185,18 @@
 							{/each}
 						</optgroup>
 					{/each}
+				</select>
+				<select
+					name="response_length"
+					id="response_length"
+					required
+					bind:value={db.responseLength}
+					class="w-fit rounded-lg border border-gray-200 bg-white p-2 dark:bg-slate-100 dark:text-slate-800"
+				>
+					<option disabled>Response length</option>
+					<option value="short">Short</option>
+					<option value="medium">Medium</option>
+					<option value="open">Open</option>
 				</select>
 				<button
 					type="button"
@@ -217,83 +228,25 @@
 				>&times;
 			</button>
 			<h2 class="mb-2 text-xl font-bold">Settings</h2>
-			<p>This is a simple dialog popup. You can put any content here.</p>
-			<form
-				class="grid items-center gap-2 rounded-xl border border-gray-200 bg-gray-100 p-2 shadow-xs"
-				style="grid-template-columns: 12ch 2fr 1fr"
-				onsubmit={e => {
-					e.preventDefault()
-					const formData = new FormData(e.currentTarget)
-					const provider = formData.get('provider') as Provider
-					const apiKey = formData.get('apiKey') as string
-					if (!apiKey) return alert('Please enter an API key')
-					if (!PROVIDERS.includes(provider)) return alert('Invalid provider')
-					setApiKey(provider, apiKey)
-				}}
-			>
-				<!-- provider selection -->
-				<select
-					name="provider"
-					id="provider"
-					required
-					class="w-fit overflow-hidden rounded-xl border border-gray-200 bg-white p-2"
-				>
-					{#each PROVIDERS as provider}
-						<option value={provider}>{provider}</option>
-					{/each}
-				</select>
 
-				<!-- api key input -->
-				<input
-					type="text"
-					name="apiKey"
-					id="apiKey"
-					required
-					class="flex-1 rounded bg-white"
-					placeholder="Enter your API key"
-				/>
-
-				<!-- save button -->
-				<button
-					type="submit"
-					class="ml-auto w-fit rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-				>
-					<Plus />
-				</button>
-			</form>
-			<!-- saved keys -->
-			<div class="my-4 flex flex-col gap-2">
-				{#if Object.keys(db.apiKeys).length > 0}
-					{#each Object.entries(db.apiKeys) as [provider, key]}
-						<div
-							class="grid items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 p-2"
-							style="grid-template-columns: 12ch 2fr 1fr"
-						>
-							<label for={`apiKey-${provider}`}>{provider}</label>
-							<p class="group truncate text-sm text-gray-500">
-								<span class="group-hover:hidden">
-									••••••••••••••••••••••••••
-								</span>
-								<button
-									class="hidden cursor-pointer group-hover:inline"
-									onclick={() => navigator.clipboard.writeText(key)}
-								>
-									Copy to clipboard
-								</button>
-							</p>
-							<button
-								class="ml-auto w-fit cursor-pointer rounded-lg bg-red-500 px-4 py-2 text-white hover:bg-red-600"
-								onclick={() => deleteApiKey(provider as Provider)}
-							>
-								<Trash />
-							</button>
-						</div>
-					{/each}
-				{:else}
-					<p class="p-4 text-center text-gray-500">
-						No API keys saved. Please enter your API keys below.
-					</p>
-				{/if}
+			<!-- providers -->
+			<div class="flex flex-col gap-2">
+				<span class="text-sm text-gray-500">API keys</span>
+				{#each PROVIDERS as provider}
+					<div class="grid grid-cols-4 items-center gap-2">
+						<label for={`apiKey-${provider}`}>{provider}</label>
+						<input
+							type="text"
+							name={`apiKey-${provider}`}
+							id={`apiKey-${provider}`}
+							placeholder={`${provider} API key`}
+							class="col-span-3 rounded-lg border border-gray-200 bg-white p-2 aria-disabled:border-rose-500 dark:bg-slate-100 dark:text-slate-800"
+							aria-disabled={!isValidApiKey(provider, db.apiKeys[provider])}
+							value={db.apiKeys[provider] || ''}
+							oninput={e => (db.apiKeys[provider] = e.currentTarget.value)}
+						/>
+					</div>
+				{/each}
 			</div>
 		</div>
 	</div>
@@ -321,7 +274,7 @@
 					name="search"
 					id="search"
 					placeholder="Search..."
-					class="w-full p-2 outline-none"
+					class="w-full border-none p-2 outline-none focus:ring-0"
 					bind:value={searchQuery}
 					autofocus
 				/>
@@ -338,7 +291,7 @@
 							<button
 								class="rounded-xl px-2 py-1 text-left"
 								onclick={() => {
-									setCurrentChat(chat.id)
+									db.setCurrentChat(chat.id)
 									showSearch = false
 								}}
 							>
@@ -353,7 +306,7 @@
 						<button
 							class="rounded-xl px-2 py-1 text-left"
 							onclick={() => {
-								setCurrentChat(chat.id)
+								db.setCurrentChat(chat.id)
 								showSearch = false
 							}}
 						>
@@ -379,3 +332,10 @@
 		}
 	}}
 />
+
+<style>
+	[aria-invalid='true'] {
+		border-color: red;
+		background-color: red;
+	}
+</style>

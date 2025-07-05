@@ -19,15 +19,21 @@ export function generateResponse({
 	messages,
 	model,
 	apiKey,
+	maxWords,
 }: {
 	messages: ContextMessage[]
 	model: Model
 	apiKey: string
+	maxWords: number | null
 }) {
+	const systemPrompt = 'You are a friendly assistant!'
 	const result = streamText({
 		model: getModel(model, apiKey),
-		system: 'You are a friendly assistant!',
+		system: maxWords
+			? systemPrompt + ` You will respond in ${maxWords} words.`
+			: systemPrompt,
 		messages,
+		seed: Math.floor(Math.random() * 1_000_000),
 	})
 	return result.textStream
 }

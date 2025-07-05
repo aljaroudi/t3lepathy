@@ -19,7 +19,9 @@
 	} = $props()
 </script>
 
-<aside class="flex flex-col gap-2 border-r border-gray-200 bg-gray-100 p-4">
+<aside
+	class="flex flex-col gap-2 border-r border-gray-200 bg-gray-100 p-4 dark:border-slate-200 dark:bg-slate-800"
+>
 	<div class="my-1 flex items-center gap-2">
 		<button
 			class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
@@ -32,24 +34,26 @@
 		<h1 class="font-mono text-xl font-bold">T3lepathy</h1>
 	</div>
 	<button
-		class="flex cursor-pointer items-center justify-center rounded-xl border bg-blue-500 p-2 text-white hover:bg-blue-600"
+		class="flex cursor-pointer items-center justify-center rounded-xl bg-blue-500 p-2 text-white hover:bg-blue-600"
 		onclick={onCreateChat}
 	>
 		<Plus />
 	</button>
-	<div class="flex flex-col gap-2 overflow-y-auto">
-		{#each db.chats as chat}
-			<button
-				class="flex truncate rounded-xl p-2 text-left aria-pressed:bg-gray-200 aria-pressed:shadow-xs"
-				aria-pressed={db.currentChatId === chat.id}
-				onclick={() => onSelectChat(chat.id)}
-			>
-				{chat.title}
-			</button>
-		{/each}
+	<div class="flex max-h-[calc(100vh-10rem)] flex-col gap-2 overflow-y-auto">
+		<div class="flex flex-col gap-2">
+			{#each db.chats as chat}
+				<button
+					class="flex truncate rounded-xl p-2 text-left aria-pressed:bg-slate-200 aria-pressed:shadow-xs dark:text-slate-200 dark:aria-pressed:bg-slate-200 dark:aria-pressed:text-slate-800"
+					aria-pressed={db.currentChatId === chat.id}
+					onclick={() => onSelectChat(chat.id)}
+				>
+					{chat.title}
+				</button>
+			{/each}
+		</div>
 	</div>
 	<button
-		class="mt-auto w-fit cursor-pointer rounded-xl bg-gray-200 p-2 shadow-xs hover:bg-gray-300"
+		class="mt-auto w-fit cursor-pointer rounded-xl p-2 shadow-xs hover:animate-spin"
 		aria-label="Settings"
 		title="Settings"
 		aria-pressed={showDialog}

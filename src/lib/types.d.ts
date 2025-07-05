@@ -54,3 +54,5 @@ export type Model =
 	| { provider: 'Anthropic'; name: AnthropicModel; title: string }
 
 type Provider = Model['provider']
+
+type ResponseLength = 'short' | 'medium' | 'open'
