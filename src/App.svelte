@@ -8,19 +8,18 @@
 		addMessage,
 		createChat,
 		state as db,
-		deleteApiKey,
 		initDB,
 		setApiKey,
 		setCurrentChat,
 	} from './lib/db.svelte'
-	import type { Model, Provider } from './lib/types'
-	import Trash from './lib/icons/Trash.svelte'
+	import type { Model, ResponseLength } from './lib/types'
 	import Panel from './lib/icons/Panel.svelte'
 	import Search from './lib/icons/Search.svelte'
 	import { convertFileToBase64 } from './lib/storage'
 	import Sidebar from './lib/ui/Sidebar.svelte'
 	import Plus from './lib/icons/Plus.svelte'
 	import Arrow from './lib/icons/Arrow.svelte'
+	import { isValidApiKey } from './lib/validate'
 
 	initDB()
 
@@ -29,6 +28,7 @@
 	let showSidebar = $state(true)
 	let showSearch = $state(false)
 	let searchQuery = $state('')
+	let responseLength = $state<ResponseLength>('medium')
 
 	async function sendMessage(message: string, files: File[]) {
 		const chatId = db.currentChatId || (await createChat('New chat'))
@@ -50,7 +50,8 @@
 				date: new Date(),
 			},
 			model,
-			apiKey
+			apiKey,
+			responseLength
 		)
 	}
 
@@ -192,6 +193,18 @@
 						</optgroup>
 					{/each}
 				</select>
+				<select
+					name="response_length"
+					id="response_length"
+					required
+					bind:value={responseLength}
+					class="w-fit rounded-lg border border-gray-200 bg-white p-2 dark:bg-slate-100 dark:text-slate-800"
+				>
+					<option disabled>Response length</option>
+					<option value="short">Short</option>
+					<option value="medium">Medium</option>
+					<option value="open">Open</option>
+				</select>
 				<button
 					type="button"
 					class="rounded-full p-2 hover:bg-gray-200 dark:border-slate-200 dark:bg-slate-200 dark:hover:bg-slate-200"
@@ -222,83 +235,26 @@
 				>&times;
 			</button>
 			<h2 class="mb-2 text-xl font-bold">Settings</h2>
-			<p>This is a simple dialog popup. You can put any content here.</p>
-			<form
-				class="grid items-center gap-2 rounded-xl border border-gray-200 bg-gray-100 p-2 shadow-xs"
-				style="grid-template-columns: 12ch 2fr 1fr"
-				onsubmit={e => {
-					e.preventDefault()
-					const formData = new FormData(e.currentTarget)
-					const provider = formData.get('provider') as Provider
-					const apiKey = formData.get('apiKey') as string
-					if (!apiKey) return alert('Please enter an API key')
-					if (!PROVIDERS.includes(provider)) return alert('Invalid provider')
-					setApiKey(provider, apiKey)
-				}}
-			>
-				<!-- provider selection -->
-				<select
-					name="provider"
-					id="provider"
-					required
-					class="w-fit overflow-hidden rounded-xl border border-gray-200 bg-white p-2"
-				>
-					{#each PROVIDERS as provider}
-						<option value={provider}>{provider}</option>
-					{/each}
-				</select>
 
-				<!-- api key input -->
-				<input
-					type="text"
-					name="apiKey"
-					id="apiKey"
-					required
-					class="flex-1 rounded bg-white"
-					placeholder="Enter your API key"
-				/>
-
-				<!-- save button -->
-				<button
-					type="submit"
-					class="ml-auto w-fit rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-				>
-					<Plus />
-				</button>
-			</form>
-			<!-- saved keys -->
-			<div class="my-4 flex flex-col gap-2">
-				{#if Object.keys(db.apiKeys).length > 0}
-					{#each Object.entries(db.apiKeys) as [provider, key]}
-						<div
-							class="grid items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 p-2"
-							style="grid-template-columns: 12ch 2fr 1fr"
-						>
-							<label for={`apiKey-${provider}`}>{provider}</label>
-							<p class="group truncate text-sm text-gray-500">
-								<span class="group-hover:hidden">
-									••••••••••••••••••••••••••
-								</span>
-								<button
-									class="hidden cursor-pointer group-hover:inline"
-									onclick={() => navigator.clipboard.writeText(key)}
-								>
-									Copy to clipboard
-								</button>
-							</p>
-							<button
-								class="ml-auto w-fit cursor-pointer rounded-lg bg-red-500 px-4 py-2 text-white hover:bg-red-600"
-								onclick={() => deleteApiKey(provider as Provider)}
-							>
-								<Trash />
-							</button>
-						</div>
-					{/each}
-				{:else}
-					<p class="p-4 text-center text-gray-500">
-						No API keys saved. Please enter your API keys below.
-					</p>
-				{/if}
+			<!-- providers -->
+			<div class="flex flex-col gap-2">
+				<span class="text-sm text-gray-500">API keys</span>
+				{#each PROVIDERS as provider}
+					<div class="grid grid-cols-4 items-center gap-2">
+						<label for={`apiKey-${provider}`}>{provider}</label>
+						<input
+							type="text"
+							name={`apiKey-${provider}`}
+							id={`apiKey-${provider}`}
+							placeholder={`${provider} API key`}
+							class="col-span-3 rounded-lg border border-gray-200 bg-white p-2 dark:bg-slate-100 dark:text-slate-800"
+							aria-invalid={!isValidApiKey(provider, db.apiKeys[provider])}
+							aria-describedby={`apiKey-${provider}-error`}
+							title={`Invalid API key for ${provider}`}
+							oninput={e => setApiKey(provider, e.currentTarget.value)}
+						/>
+					</div>
+				{/each}
 			</div>
 		</div>
 	</div>
