@@ -39,16 +39,18 @@
 	>
 		<Plus />
 	</button>
-	<div class="flex flex-col gap-2 overflow-y-auto">
-		{#each db.chats as chat}
-			<button
-				class="flex truncate rounded-xl p-2 text-left aria-pressed:bg-slate-200 aria-pressed:shadow-xs dark:text-slate-200 dark:aria-pressed:bg-slate-200 dark:aria-pressed:text-slate-800"
-				aria-pressed={db.currentChatId === chat.id}
-				onclick={() => onSelectChat(chat.id)}
-			>
-				{chat.title}
-			</button>
-		{/each}
+	<div class="flex max-h-[calc(100vh-10rem)] flex-col gap-2 overflow-y-auto">
+		<div class="flex flex-col gap-2">
+			{#each db.chats as chat}
+				<button
+					class="flex truncate rounded-xl p-2 text-left aria-pressed:bg-slate-200 aria-pressed:shadow-xs dark:text-slate-200 dark:aria-pressed:bg-slate-200 dark:aria-pressed:text-slate-800"
+					aria-pressed={db.currentChatId === chat.id}
+					onclick={() => onSelectChat(chat.id)}
+				>
+					{chat.title}
+				</button>
+			{/each}
+		</div>
 	</div>
 	<button
 		class="mt-auto w-fit cursor-pointer rounded-xl p-2 shadow-xs hover:animate-spin"
