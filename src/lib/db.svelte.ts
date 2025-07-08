@@ -150,7 +150,7 @@ export let state = $state({
 })
 
 const LENGTH_IN_SENTENCES: Record<ResponseLength, number | null> = {
-	short: 10,
-	medium: 100,
+	short: 3,
+	medium: 10,
 	open: null,
 }
