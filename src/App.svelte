@@ -13,6 +13,8 @@
 	import Plus from './lib/icons/Plus.svelte'
 	import Arrow from './lib/icons/Arrow.svelte'
 	import { isValidApiKey } from './lib/validate'
+	import * as Select from './lib/components/ui/select/index'
+	import '@fontsource-variable/ibm-plex-sans'
 
 	void db.init()
 
@@ -168,36 +170,56 @@
 				spellcheck="false"
 			/>
 			<div class="flex gap-2 px-2 py-1">
-				<select
-					name="model"
-					id="model"
-					required
-					bind:value={currentModel}
-					class="w-fit rounded-lg border border-gray-200 bg-white p-2 dark:bg-slate-100 dark:text-slate-800"
-				>
-					{#each PROVIDERS as provider}
-						{@const keyIsSet = db.apiKeys[provider]?.length}
-						<optgroup label={keyIsSet ? provider : `${provider} (no key)`}>
-							{#each MODELS.filter(model => model.provider === provider) as model}
-								<option value={model.name} disabled={!keyIsSet}>
-									{model.title}
-								</option>
-							{/each}
-						</optgroup>
-					{/each}
-				</select>
-				<select
-					name="response_length"
-					id="response_length"
-					required
-					bind:value={db.responseLength}
-					class="w-fit rounded-lg border border-gray-200 bg-white p-2 dark:bg-slate-100 dark:text-slate-800"
-				>
-					<option disabled>Response length</option>
-					<option value="short">Short</option>
-					<option value="medium">Medium</option>
-					<option value="open">Open</option>
-				</select>
+				<Select.Root type="single" required bind:value={currentModel}>
+					<Select.Trigger class="w-[180px]">
+						{MODELS.filter(m => m.name === currentModel)[0].title}
+					</Select.Trigger>
+					<Select.Content>
+						{#each PROVIDERS as provider}
+							{@const keyIsSet = db.apiKeys[provider]?.length}
+							<Select.Group>
+								<Select.Label class="text-base">{provider}</Select.Label>
+								{#each MODELS.filter(model => model.provider === provider) as model}
+									<Select.Item value={model.name} disabled={!keyIsSet}>
+										<div class="flex flex-col gap-2 pl-2">
+											<span>{model.title}</span>
+											<span class="text-xs text-gray-500">
+												{model.description}
+											</span>
+										</div>
+									</Select.Item>
+								{/each}
+							</Select.Group>
+						{/each}
+					</Select.Content>
+				</Select.Root>
+
+				<Select.Root type="single" bind:value={db.responseLength}>
+					<Select.Trigger class="w-[100px] capitalize">
+						{db.responseLength}
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value="short">
+							<div class="flex flex-col gap-2">
+								<span>Short</span>
+								<span class="text-xs text-gray-500">Up to 3 sentences</span>
+							</div>
+						</Select.Item>
+						<Select.Item value="medium">
+							<div class="flex flex-col gap-2">
+								<span>Medium</span>
+								<span class="text-xs text-gray-500">Up to 5 sentences</span>
+							</div>
+						</Select.Item>
+						<Select.Item value="open">
+							<div class="flex flex-col gap-2">
+								<span>Open</span>
+								<span class="text-xs text-gray-500">No limit</span>
+							</div>
+						</Select.Item>
+					</Select.Content>
+				</Select.Root>
+
 				<button
 					type="button"
 					class="rounded-full p-2 hover:bg-gray-200 dark:border-slate-200 dark:bg-slate-200 dark:hover:bg-slate-200"
@@ -334,6 +356,9 @@
 />
 
 <style>
+	:global(body) {
+		font-family: 'IBM Plex Sans', sans-serif;
+	}
 	[aria-invalid='true'] {
 		border-color: red;
 		background-color: red;
