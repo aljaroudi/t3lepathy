@@ -49,9 +49,24 @@ type GoogleModel = Parameters<ReturnType<typeof createGoogleGenerativeAI>>[0]
 type AnthropicModel = Parameters<ReturnType<typeof createAnthropic>>[0]
 
 export type Model =
-	| { provider: 'OpenAI'; name: OpenAIModel; title: string }
-	| { provider: 'Google'; name: GoogleModel; title: string }
-	| { provider: 'Anthropic'; name: AnthropicModel; title: string }
+	| {
+			provider: 'OpenAI'
+			name: OpenAIModel
+			title: string
+			description: string
+	  }
+	| {
+			provider: 'Google'
+			name: GoogleModel
+			title: string
+			description: string
+	  }
+	| {
+			provider: 'Anthropic'
+			name: AnthropicModel
+			title: string
+			description: string
+	  }
 
 type Provider = Model['provider']
 
