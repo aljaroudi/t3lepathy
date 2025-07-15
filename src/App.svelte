@@ -137,7 +137,13 @@
 					</div>
 				{:else}
 					<p style="max-width: 80ch">
-						{@html marked.parse(message.content)}
+						{#each message.content as part}
+							{#if part.type === 'text'}
+								{@html marked.parse(part.text)}
+							{:else if part.type === 'image'}
+								<img src={part.image} alt="Message attachment" />
+							{/if}
+						{/each}
 					</p>
 				{/if}
 			{/each}
