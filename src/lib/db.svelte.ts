@@ -31,12 +31,9 @@ export let state = $state({
 		localStorage.setItem('apiKeys', JSON.stringify(value))
 	},
 
-	get responseLength(): ResponseLength {
-		return (
-			(localStorage.getItem('responseLength') as ResponseLength) || 'medium'
-		)
-	},
-	set responseLength(value: ResponseLength) {
+	responseLength:
+		(localStorage.getItem('responseLength') as ResponseLength) || 'medium',
+	setResponseLength(value: ResponseLength) {
 		localStorage.setItem('responseLength', value)
 	},
 
