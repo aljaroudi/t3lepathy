@@ -6,8 +6,10 @@ import type {
 	Model,
 	Provider,
 	ResponseLength,
+	LLMMessage,
 } from './types'
-import { generateResponse, generateTitle } from './ai'
+import { expectsImage, generateResponse, generateTitle, genImage } from './ai'
+import type { ImagePart, TextPart } from 'ai'
 
 const dbPromise = openDB<ChatDB>('chat-db', 1, {
 	upgrade(db) {
@@ -23,9 +25,7 @@ export let state = $state({
 	currentChatId: null as string | null,
 
 	get apiKeys(): Record<Provider, string> {
-		const keys = localStorage.getItem('apiKeys')
-		if (!keys) return {} as Record<Provider, string>
-		return JSON.parse(keys) as Record<Provider, string>
+		return getApiKeys()
 	},
 	set apiKeys(value: Record<Provider, string>) {
 		localStorage.setItem('apiKeys', JSON.stringify(value))
@@ -56,7 +56,9 @@ export let state = $state({
 	async setCurrentChat(chatId: string) {
 		const db = await dbPromise
 		const messages = await db.getAllFromIndex('messages', 'chatId', chatId)
-		this.messages = messages.sort((a, b) => a.date.getTime() - b.date.getTime())
+		this.messages = messages.sort(
+			(a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+		)
 		this.currentChatId = chatId
 	},
 
@@ -64,7 +66,8 @@ export let state = $state({
 		const db = await dbPromise
 		const chat: Chat = { id: crypto.randomUUID(), title, date: new Date() }
 		await db.put('chats', chat)
-		this.chats.push(chat)
+		this.chats.unshift(chat)
+
 		await this.setCurrentChat(chat.id)
 		return chat.id
 	},
@@ -88,11 +91,25 @@ export let state = $state({
 	async addMessage(
 		msg: Extract<Message, { role: 'user' }>,
 		model: Model,
-		apiKey: string,
 		responseLength: ResponseLength
 	) {
-		const shouldAutoRename = this.messages.length === 0
 		const db = await dbPromise
+
+		const firstMessage = msg.content.find(m => m.type === 'text')?.text
+		if (!firstMessage) return
+
+		const shouldAutoRename = this.messages.length === 0
+
+		if (shouldAutoRename) {
+			const chat = this.chats.find(c => c.id === msg.chatId)
+			if (!chat) return
+			chat.title = ''
+			const titleStream = generateTitle({ message: firstMessage, model })
+			for await (const chunk of titleStream) {
+				chat.title += chunk
+				await db.put('chats', { ...chat })
+			}
+		}
 		// 1. Add user message to db
 		await db.put('messages', msg)
 		this.messages.push(msg)
@@ -109,39 +126,51 @@ export let state = $state({
 		const reply = {
 			id: messageId,
 			chatId: msg.chatId,
-			content: '',
+			content: [] as Array<TextPart | ImagePart>,
 			role: 'assistant' as const,
 			date: new Date(),
-		} satisfies Message
+		} satisfies LLMMessage
 		await db.put('messages', reply)
 		const msgIdx = this.messages.push(reply) - 1
+
+		// 4. Requested an image?
+		const imageRequested = await expectsImage({ message: msg, model })
+		if (imageRequested) {
+			const image = await genImage({
+				message: firstMessage,
+				ratio: '1:1',
+				size: '1024x1024',
+			})
+			this.messages[msgIdx].content.push({
+				type: 'image',
+				image: `data:${image.image.mimeType};base64,${image.image.base64}`,
+				mimeType: image.image.mimeType,
+			})
+			const clone = JSON.parse(JSON.stringify(this.messages[msgIdx]))
+			await db.put('messages', clone)
+			return
+		}
 
 		// 4. Update the message with the response
 		const stream = generateResponse({
 			messages: chatHistory,
 			model,
-			apiKey,
 			maxWords: LENGTH_IN_SENTENCES[responseLength],
 		})
 
+		/** index of the text part of the response */
+		const txtResponseIdx =
+			this.messages[msgIdx].content.push({ type: 'text', text: '' }) - 1
+
 		for await (const chunk of stream) {
 			if (this.messages[msgIdx].role === 'user') continue
-			this.messages[msgIdx].content += chunk
-			await db.put('messages', { ...this.messages[msgIdx] })
-		}
+			if (this.messages[msgIdx].content[txtResponseIdx].type !== 'text')
+				continue
+			this.messages[msgIdx].content[txtResponseIdx].text += chunk
 
-		// 5. If it's a new chat, auto-rename it
-		if (!shouldAutoRename) return
-		const firstMessage = msg.content.find(m => m.type === 'text')?.text
-		if (!firstMessage) return
-
-		const chat = this.chats.find(c => c.id === msg.chatId)
-		if (!chat) return
-		chat.title = ''
-		const titleStream = generateTitle({ message: firstMessage, model, apiKey })
-		for await (const chunk of titleStream) {
-			chat.title += chunk
-			await db.put('chats', { ...chat })
+			// Deep clone the message to avoid IDB DataCloneError (e.g., from proxies or non-cloneable objects)
+			const messageToStore = JSON.parse(JSON.stringify(this.messages[msgIdx]))
+			await db.put('messages', messageToStore)
 		}
 	},
 })
@@ -150,4 +179,10 @@ const LENGTH_IN_SENTENCES: Record<ResponseLength, number | null> = {
 	short: 3,
 	medium: 10,
 	open: null,
+}
+
+export function getApiKeys() {
+	const keys = localStorage.getItem('apiKeys')
+	if (!keys) return {} as Record<Provider, string>
+	return JSON.parse(keys) as Record<Provider, string>
 }
