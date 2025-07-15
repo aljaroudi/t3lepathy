@@ -31,12 +31,9 @@ export let state = $state({
 		localStorage.setItem('apiKeys', JSON.stringify(value))
 	},
 
-	get responseLength(): ResponseLength {
-		return (
-			(localStorage.getItem('responseLength') as ResponseLength) || 'medium'
-		)
-	},
-	set responseLength(value: ResponseLength) {
+	responseLength:
+		(localStorage.getItem('responseLength') as ResponseLength) || 'medium',
+	setResponseLength(value: ResponseLength) {
 		localStorage.setItem('responseLength', value)
 	},
 
@@ -150,7 +147,7 @@ export let state = $state({
 })
 
 const LENGTH_IN_SENTENCES: Record<ResponseLength, number | null> = {
-	short: 10,
-	medium: 100,
+	short: 3,
+	medium: 10,
 	open: null,
 }

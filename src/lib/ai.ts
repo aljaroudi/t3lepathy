@@ -30,7 +30,7 @@ export function generateResponse({
 	const result = streamText({
 		model: getModel(model, apiKey),
 		system: maxWords
-			? systemPrompt + ` You will respond in ${maxWords} words.`
+			? systemPrompt + ` You will respond in ${maxWords} sentences.`
 			: systemPrompt,
 		messages,
 		seed: Math.floor(Math.random() * 1_000_000),
@@ -60,26 +60,31 @@ export const MODELS = [
 		provider: 'OpenAI',
 		title: 'GPT-4o Mini',
 		name: 'gpt-4o-mini',
+		description: 'Smallest, fast, cost-efficient',
 	},
 	{
 		provider: 'OpenAI',
 		title: 'GPT-4o',
 		name: 'gpt-4o',
+		description: 'Balanced performance and cost',
 	},
 	{
 		provider: 'Google',
 		title: 'Gemini 1.5 Flash',
 		name: 'gemini-1.5-flash',
+		description: 'Fastest, cost-efficient Gemini',
 	},
 	{
 		provider: 'Google',
 		title: 'Gemini 1.5 Pro',
 		name: 'gemini-1.5-pro',
+		description: 'Balanced Gemini performance/cost',
 	},
 	{
 		provider: 'Anthropic',
 		title: 'Claude 3.5 Sonnet',
 		name: 'claude-3-5-sonnet-20240620',
+		description: 'Balanced Claude performance/cost',
 	},
 ] satisfies Model[]
 
