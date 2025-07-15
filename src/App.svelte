@@ -15,6 +15,7 @@
 	import { isValidApiKey } from './lib/validate'
 	import * as Select from './lib/components/ui/select/index'
 	import '@fontsource-variable/ibm-plex-sans'
+	import { LoaderCircle } from '@lucide/svelte'
 
 	void db.init()
 
@@ -23,6 +24,7 @@
 	let showSidebar = $state(true)
 	let showSearch = $state(false)
 	let searchQuery = $state('')
+	let loading = $state(false)
 
 	async function sendMessage(message: string, files: File[]) {
 		const chatId = db.currentChatId || (await db.addChat('New chat'))
@@ -32,21 +34,24 @@
 		const apiKey = db.apiKeys[model.provider]
 		if (!apiKey) return alert('No API key found for this model')
 		// User
-		db.addMessage(
-			{
-				id: crypto.randomUUID(),
-				chatId,
-				content: [
-					{ type: 'text' as const, text: message },
-					...(await Promise.all(files.map(convertFileToBase64))),
-				],
-				role: 'user',
-				date: new Date(),
-			},
-			model,
-			apiKey,
-			db.responseLength
-		)
+
+		loading = true
+		await db
+			.addMessage(
+				{
+					id: crypto.randomUUID(),
+					chatId,
+					content: [
+						{ type: 'text' as const, text: message },
+						...(await Promise.all(files.map(convertFileToBase64))),
+					],
+					role: 'user',
+					date: new Date(),
+				},
+				model,
+				db.responseLength
+			)
+			.finally(() => (loading = false))
 	}
 
 	const marked = new Marked(
@@ -141,12 +146,21 @@
 							{#if part.type === 'text'}
 								{@html marked.parse(part.text)}
 							{:else if part.type === 'image'}
-								<img src={part.image} alt="Message attachment" />
+								<img
+									src={part.image}
+									alt="Message attachment"
+									class="rounded-lg object-cover"
+								/>
 							{/if}
 						{/each}
 					</p>
 				{/if}
 			{/each}
+			{#if loading}
+				<div class="flex animate-spin items-center justify-center">
+					<LoaderCircle />
+				</div>
+			{/if}
 		</div>
 		<!-- Floating input form -->
 		<form
