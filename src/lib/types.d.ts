@@ -14,7 +14,10 @@ export type UserContextMessage = {
 	role: 'user'
 	content: Array<TextPart | ImagePart | FilePart>
 }
-export type LLMContextMessage = { role: 'assistant'; content: string }
+export type LLMContextMessage = {
+	role: 'assistant'
+	content: Array<TextPart | ImagePart>
+}
 export type ContextMessage = UserContextMessage | LLMContextMessage
 
 type MessageBase = { id: string; chatId: string; date: Date }
