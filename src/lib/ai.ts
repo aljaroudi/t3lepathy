@@ -32,9 +32,8 @@ export async function genImage({
 }) {
 	const apiKey = getApiKeys()['OpenAI']
 	if (!apiKey) throw new Error('No API key found')
-
 	return generateImage({
-		model: createOpenAI({ apiKey }).image('gpt-image-1'),
+		model: createOpenAI({ apiKey }).image('dall-e-3'),
 		prompt: message,
 		size,
 		aspectRatio: ratio,
