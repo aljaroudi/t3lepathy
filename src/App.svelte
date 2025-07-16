@@ -285,7 +285,9 @@
 							class="col-span-3 rounded-lg border border-gray-200 bg-white p-2 aria-disabled:border-rose-500 dark:bg-slate-100 dark:text-slate-800"
 							aria-disabled={!isValidApiKey(provider, db.apiKeys[provider])}
 							value={db.apiKeys[provider] || ''}
-							oninput={e => (db.apiKeys[provider] = e.currentTarget.value)}
+							oninput={({ currentTarget: { value } }) => {
+								db.apiKeys = { ...db.apiKeys, [provider]: value }
+							}}
 						/>
 					</div>
 				{/each}
