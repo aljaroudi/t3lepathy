@@ -1,49 +1,37 @@
 <script lang="ts">
+	import type { TextPart } from 'ai'
 	import type { Message } from '../types'
 	import { marked } from './markdown'
 
 	let { message }: { message: Message } = $props()
+
+	const attachments = message.content.filter(part => part.type !== 'text')
 </script>
 
-{#if message.role === 'user'}
-	<div
-		class="my-2 ml-auto rounded-2xl rounded-br-none bg-zinc-100 px-4 py-2 text-slate-800 shadow-xs"
-		style="max-width: 60ch"
-	>
-		{#each message.content.filter(part => part.type === 'text') as part}
-			{@html marked.parse(part.text)}
-		{/each}
-		{#if message.content.some(part => part.type !== 'text')}
-			{@const images = message.content.filter(part => part.type === 'image')}
-			{@const files = message.content.filter(part => part.type === 'file')}
-			<div class="flex gap-2">
-				{#each images as image}
+<div
+	class={message.role === 'user'
+		? 'my-2 ml-auto rounded-2xl rounded-br-none bg-zinc-100 px-4 py-2 text-slate-800 shadow-xs'
+		: ''}
+	style="max-width: {message.role === 'user' ? '60ch' : '80ch'}"
+>
+	{#each message.content.filter(part => part.type === 'text') as TextPart[] as part}
+		{@html marked.parse(part.text)}
+	{/each}
+	{#if attachments.length > 0}
+		<div class="flex gap-2">
+			{#each attachments as attachment}
+				{#if attachment.type === 'image'}
 					<img
-						src={image.image}
+						src={attachment.image}
 						alt="Message attachment"
 						class="size-20 rounded-lg object-cover"
 					/>
-				{/each}
-				{#each files as file}
+				{:else if attachment.type === 'file'}
 					<p class="rounded-full bg-cyan-700 px-3 py-1 text-sm text-white">
-						{file.filename || `${file.mimeType} file`}
+						{attachment.filename || `${attachment.mimeType} file`}
 					</p>
-				{/each}
-			</div>
-		{/if}
-	</div>
-{:else}
-	<p style="max-width: 80ch">
-		{#each message.content as part}
-			{#if part.type === 'text'}
-				{@html marked.parse(part.text)}
-			{:else if part.type === 'image'}
-				<img
-					src={part.image}
-					alt="Message attachment"
-					class="rounded-lg object-cover"
-				/>
-			{/if}
-		{/each}
-	</p>
-{/if}
+				{/if}
+			{/each}
+		</div>
+	{/if}
+</div>
