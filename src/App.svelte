@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { Marked } from 'marked'
-	import { markedHighlight } from 'marked-highlight'
-	import hljs from 'highlight.js'
 	import 'highlight.js/styles/atom-one-dark.min.css'
 	import { MODELS, PROVIDERS } from './lib/ai'
 	import { state as db } from './lib/db.svelte'
@@ -9,13 +6,14 @@
 	import Panel from './lib/icons/Panel.svelte'
 	import Search from './lib/icons/Search.svelte'
 	import { convertFileToBase64 } from './lib/storage'
-	import Sidebar from './lib/ui/Sidebar.svelte'
+	import Sidebar from './lib/components/Sidebar.svelte'
 	import Plus from './lib/icons/Plus.svelte'
 	import Arrow from './lib/icons/Arrow.svelte'
 	import { isValidApiKey } from './lib/validate'
 	import * as Select from './lib/components/ui/select/index'
 	import '@fontsource-variable/ibm-plex-sans'
 	import { LoaderCircle } from '@lucide/svelte'
+	import Bubble from './lib/components/Bubble.svelte'
 
 	void db.init()
 
@@ -53,17 +51,6 @@
 			)
 			.finally(() => (loading = false))
 	}
-
-	const marked = new Marked(
-		markedHighlight({
-			emptyLangClass: 'hljs',
-			langPrefix: 'hljs language-',
-			highlight(code, lang) {
-				const language = hljs.getLanguage(lang) ? lang : 'plaintext'
-				return hljs.highlight(code, { language }).value
-			},
-		})
-	).setOptions({ pedantic: false, gfm: true, breaks: false })
 </script>
 
 <main
@@ -107,54 +94,7 @@
 			style="scroll-padding-bottom: 120px; padding-bottom: calc(120px + 1rem);"
 		>
 			{#each db.messages as message}
-				{#if message.role === 'user'}
-					<div
-						class="my-2 ml-auto rounded-2xl rounded-br-none bg-zinc-100 px-4 py-2 text-slate-800 shadow-xs"
-						style="max-width: 60ch"
-					>
-						{#each message.content.filter(part => part.type === 'text') as part}
-							{@html marked.parse(part.text)}
-						{/each}
-						{#if message.content.some(part => part.type !== 'text')}
-							{@const images = message.content.filter(
-								part => part.type === 'image'
-							)}
-							{@const files = message.content.filter(
-								part => part.type === 'file'
-							)}
-							<div class="flex gap-2">
-								{#each images as image}
-									<img
-										src={image.image}
-										alt="Message attachment"
-										class="size-20 rounded-lg object-cover"
-									/>
-								{/each}
-								{#each files as file}
-									<p
-										class="rounded-full bg-cyan-700 px-3 py-1 text-sm text-white"
-									>
-										{file.filename || `${file.mimeType} file`}
-									</p>
-								{/each}
-							</div>
-						{/if}
-					</div>
-				{:else}
-					<p style="max-width: 80ch">
-						{#each message.content as part}
-							{#if part.type === 'text'}
-								{@html marked.parse(part.text)}
-							{:else if part.type === 'image'}
-								<img
-									src={part.image}
-									alt="Message attachment"
-									class="rounded-lg object-cover"
-								/>
-							{/if}
-						{/each}
-					</p>
-				{/if}
+				<Bubble {message} />
 			{/each}
 			{#if loading}
 				<div class="flex animate-spin items-center justify-center">
