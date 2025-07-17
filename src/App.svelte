@@ -55,7 +55,8 @@
 
 <main
 	class="grid h-dvh w-full transition-all duration-300 ease-in-out dark:bg-slate-800 dark:text-slate-100"
-	style="grid-template-columns: {showSidebar ? '240px' : '0px'} 1fr"
+	data-sidebar={showSidebar}
+	style="grid-template-columns: var(--sidebar-width) 1fr"
 >
 	{#if showSidebar}
 		<Sidebar
@@ -92,7 +93,7 @@
 		>
 			<div
 				class="mx-auto flex w-full flex-1 flex-col gap-4"
-				style="max-width: 800px"
+				style="width: var(--content-width)"
 			>
 				{#each db.messages as message}
 					<Bubble {message} />
@@ -107,7 +108,7 @@
 		<!-- Floating input form -->
 		<form
 			class="absolute right-2 bottom-0 left-2 z-20 mx-auto flex w-full flex-col gap-2 rounded-t-xl border border-b-0 border-slate-200 bg-white/80 p-2 shadow-xs backdrop-blur-xs dark:border-slate-200/20 dark:bg-slate-800/80"
-			style="height: 120px; max-width: min(85ch, calc(100% - 1rem))"
+			style="height: 120px; width: calc(var(--content-width) + 1rem)"
 			onsubmit={e => {
 				e.preventDefault()
 				const formData = new FormData(e.currentTarget)
