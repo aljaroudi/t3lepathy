@@ -85,27 +85,29 @@
 			</button>
 		</div>
 	{/if}
-	<section
-		class="relative mx-auto flex h-dvh w-full flex-col gap-2 px-4"
-		style="max-width: 80ch"
-	>
+	<section class="relative flex h-dvh w-full flex-col gap-2 px-4">
 		<div
-			class="flex flex-1 flex-col gap-2 overflow-y-auto"
+			class="overflow-y-auto"
 			style="scroll-padding-bottom: 120px; padding-bottom: calc(120px + 1rem);"
 		>
-			{#each db.messages as message}
-				<Bubble {message} />
-			{/each}
-			{#if loading}
-				<div class="flex animate-spin items-center justify-center">
-					<LoaderCircle />
-				</div>
-			{/if}
+			<div
+				class="mx-auto flex w-full flex-1 flex-col gap-4"
+				style="max-width: 800px"
+			>
+				{#each db.messages as message}
+					<Bubble {message} />
+				{/each}
+				{#if loading}
+					<div class="flex animate-spin items-center justify-center">
+						<LoaderCircle />
+					</div>
+				{/if}
+			</div>
 		</div>
 		<!-- Floating input form -->
 		<form
-			class="absolute right-2 bottom-2 left-2 z-20 mx-auto flex w-full max-w-[60ch] flex-col gap-2 rounded-xl border border-slate-200 bg-white/80 p-2 shadow-xs backdrop-blur dark:border-slate-200/20 dark:bg-slate-800/80"
-			style="height: 120px; max-width: calc(100% - 1rem)"
+			class="absolute right-2 bottom-0 left-2 z-20 mx-auto flex w-full flex-col gap-2 rounded-t-xl border border-b-0 border-slate-200 bg-white/80 p-2 shadow-xs backdrop-blur-xs dark:border-slate-200/20 dark:bg-slate-800/80"
+			style="height: 120px; max-width: min(85ch, calc(100% - 1rem))"
 			onsubmit={e => {
 				e.preventDefault()
 				const formData = new FormData(e.currentTarget)
