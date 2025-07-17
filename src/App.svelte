@@ -80,14 +80,14 @@
 			style="z-index: 10"
 		>
 			<button
-				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
+				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
 				style="transform: rotate(180deg)"
 				onclick={() => (showSidebar = true)}
 			>
 				<Panel />
 			</button>
 			<button
-				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
+				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
 				onclick={() => db.addChat('New chat')}
 			>
 				<Plus />
@@ -205,7 +205,7 @@
 				<input type="file" name="file" id="file" class="hidden" multiple />
 				<button
 					type="submit"
-					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-cyan-700 text-lg text-white"
+					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-radial from-cyan-500 to-cyan-700 text-lg text-white"
 				>
 					<Arrow />
 				</button>

@@ -32,7 +32,7 @@
 </script>
 
 <aside
-	class="flex max-h-dvh flex-col gap-2 bg-gradient-to-b from-slate-100 to-slate-200 p-4 dark:bg-slate-800 dark:from-cyan-950 dark:to-slate-950"
+	class="flex max-h-dvh flex-col gap-2 bg-linear-to-b from-slate-100 to-slate-200 p-4 dark:bg-slate-800 dark:from-cyan-950 dark:to-slate-950"
 >
 	<div class="my-1 flex items-center justify-between gap-2">
 		<button
@@ -75,7 +75,7 @@
 			bind:value={searchQuery}
 		/>
 		<button
-			class="flex cursor-pointer items-center justify-center rounded-full bg-linear-to-br from-cyan-500 to-cyan-600 p-2 text-white hover:bg-cyan-600 hover:text-white dark:text-white"
+			class="flex cursor-pointer items-center justify-center rounded-full bg-radial from-cyan-500 to-cyan-700 p-2 text-white hover:bg-cyan-600 hover:text-white dark:text-white"
 			onclick={onCreateChat}
 		>
 			<Plus />
