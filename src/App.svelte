@@ -1,6 +1,6 @@
 <script lang="ts">
 	import 'highlight.js/styles/atom-one-dark.min.css'
-	import { MODELS, PROVIDERS } from './lib/ai'
+	import { getFileTypes, MODELS, PROVIDERS } from './lib/ai'
 	import { state as db, persistedState } from './lib/db.svelte'
 	import type { Model, ResponseLength } from './lib/types'
 	import Panel from './lib/icons/Panel.svelte'
@@ -27,17 +27,18 @@
 		'responseLength',
 		'medium'
 	)
-	let currentModel = persistedState<Model['name']>(
+	let currentModelId = persistedState<Model['name']>(
 		'currentModel',
 		'gemini-1.5-flash'
+	)
+	const currentModel = $derived(
+		MODELS.find(m => m.name === currentModelId.value)!
 	)
 
 	async function sendMessage(message: string, files: File[]) {
 		const chatId = db.currentChatId || (await db.addChat('New chat'))
 
-		const model = MODELS.find(m => m.name === currentModel.value)
-		if (!model) return alert('Invalid model')
-		const apiKey = db.apiKeys[model.provider]
+		const apiKey = db.apiKeys[currentModel.provider]
 		if (!apiKey) return alert('No API key found for this model')
 		// User
 		const msgId = crypto.randomUUID()
@@ -54,7 +55,7 @@
 					role: 'user',
 					date: new Date(),
 				},
-				model,
+				currentModel,
 				responseLength.value
 			)
 			.catch(() => alert('Error sending message'))
@@ -137,11 +138,11 @@
 				spellcheck="false"
 			/>
 			<div class="flex gap-2 px-2 py-1">
-				<Select.Root type="single" required bind:value={currentModel.value}>
+				<Select.Root type="single" required bind:value={currentModelId.value}>
 					<Select.Trigger
-						class="w-[180px] cursor-pointer border-none shadow-none hover:bg-cyan-100 dark:bg-transparent dark:hover:bg-cyan-900"
+						class="cursor-pointer border-none shadow-none hover:bg-cyan-100 dark:bg-transparent dark:hover:bg-cyan-900"
 					>
-						{MODELS.filter(m => m.name === currentModel.value)[0].title}
+						{currentModel.title}
 					</Select.Trigger>
 					<Select.Content>
 						{#each PROVIDERS as provider}
@@ -193,12 +194,20 @@
 
 				<button
 					type="button"
-					class="size-9 cursor-pointer rounded-lg hover:bg-cyan-100 dark:hover:bg-cyan-900 dark:hover:text-white"
+					class="size-9 cursor-pointer rounded-lg hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-cyan-900 dark:hover:text-white"
 					onclick={() => document.getElementById('file')?.click()}
+					disabled={getFileTypes(currentModel).length === 0}
 				>
 					<PaperclipIcon size={16} class="mx-auto" />
 				</button>
-				<input type="file" name="file" id="file" class="hidden" multiple />
+				<input
+					type="file"
+					name="file"
+					id="file"
+					class="hidden"
+					multiple
+					accept={getFileTypes(currentModel)}
+				/>
 				<button
 					type="submit"
 					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-radial-[at_25%_25%] from-cyan-500 to-cyan-700 to-75% text-lg text-white hover:bg-radial-[at_50%_50%]"
