@@ -79,19 +79,19 @@ export async function expectsImage({
 	}).then(result => result.text.includes('true'))
 }
 
-export function generateTitle({
+export async function generateTitle({
 	message,
 	model,
 }: {
 	message: string
 	model: Model
 }) {
-	return streamText({
+	return generateText({
 		model: getModel(model),
 		system:
 			"Generate a short, descriptive title (max 5 words) for this conversation based on the user's first message. The title should capture the main topic or purpose of the discussion.",
 		messages: [{ role: 'user', content: message }],
-	}).textStream
+	}).then(result => result.text)
 }
 
 export const MODELS = [
@@ -112,6 +112,12 @@ export const MODELS = [
 		title: 'Gemini 1.5 Flash',
 		name: 'gemini-1.5-flash',
 		description: 'Fastest, cost-efficient Gemini',
+	},
+	{
+		provider: 'Google',
+		title: 'Gemini 2.5 Flash (Preview)',
+		name: 'gemini-2.5-flash-preview-04-17',
+		description: 'Latest, powerful Gemini',
 	},
 	{
 		provider: 'Google',
