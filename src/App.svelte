@@ -12,7 +12,7 @@
 	import { isValidApiKey } from './lib/validate'
 	import * as Select from './lib/components/ui/select/index'
 	import '@fontsource-variable/ibm-plex-sans'
-	import { LoaderCircleIcon } from '@lucide/svelte'
+	import { LoaderCircleIcon, PaperclipIcon } from '@lucide/svelte'
 	import Bubble from './lib/components/Bubble.svelte'
 	import LengthIcon from './lib/components/LengthIcon.svelte'
 
@@ -143,7 +143,7 @@
 			<div class="flex gap-2 px-2 py-1">
 				<Select.Root type="single" required bind:value={currentModel.value}>
 					<Select.Trigger
-						class="w-[180px] cursor-pointer border-none shadow-none hover:bg-cyan-100 dark:hover:bg-cyan-900"
+						class="w-[180px] cursor-pointer border-none shadow-none hover:bg-cyan-100 dark:bg-transparent dark:hover:bg-cyan-900"
 					>
 						{MODELS.filter(m => m.name === currentModel.value)[0].title}
 					</Select.Trigger>
@@ -169,7 +169,7 @@
 
 				<Select.Root type="single" bind:value={responseLength.value}>
 					<Select.Trigger
-						class="w-[100px] cursor-pointer border-none capitalize shadow-none hover:bg-cyan-100 dark:hover:bg-cyan-900"
+						class="cursor-pointer border-none capitalize shadow-none hover:bg-cyan-100 dark:bg-transparent dark:hover:bg-cyan-900"
 					>
 						<LengthIcon length={responseLength.value} />
 					</Select.Trigger>
@@ -197,10 +197,10 @@
 
 				<button
 					type="button"
-					class="rounded-full p-2 hover:bg-gray-200 dark:border-slate-200 dark:bg-slate-200 dark:hover:bg-slate-200"
+					class="size-9 cursor-pointer rounded-lg hover:bg-cyan-900"
 					onclick={() => document.getElementById('file')?.click()}
 				>
-					📎
+					<PaperclipIcon size={16} class="mx-auto" />
 				</button>
 				<input type="file" name="file" id="file" class="hidden" multiple />
 				<button
