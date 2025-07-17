@@ -75,7 +75,7 @@
 			bind:value={searchQuery}
 		/>
 		<button
-			class="flex cursor-pointer items-center justify-center rounded-full bg-radial from-cyan-500 to-cyan-700 p-2 text-white hover:bg-cyan-600 hover:text-white dark:text-white"
+			class="flex cursor-pointer items-center justify-center rounded-full bg-radial-[at_25%_25%] from-cyan-500 to-cyan-700 to-75% p-2 text-lg text-white hover:bg-radial-[at_50%_50%]"
 			onclick={onCreateChat}
 		>
 			<Plus />

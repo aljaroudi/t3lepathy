@@ -205,7 +205,7 @@
 				<input type="file" name="file" id="file" class="hidden" multiple />
 				<button
 					type="submit"
-					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-radial from-cyan-500 to-cyan-700 text-lg text-white"
+					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-radial-[at_25%_25%] from-cyan-500 to-cyan-700 to-75% text-lg text-white hover:bg-radial-[at_50%_50%]"
 				>
 					<Arrow />
 				</button>
