@@ -181,20 +181,16 @@ export function getApiKeys() {
 	return JSON.parse(keys) as Record<Provider, string>
 }
 
-function createResponseLengthState() {
-	let responseLength = $state<ResponseLength>(
-		(localStorage.getItem('responseLength') as ResponseLength) || 'medium'
-	)
+export function persistedState<T extends string>(key: string, initialValue: T) {
+	let value = $state<T>((localStorage.getItem(key) as T) || initialValue)
 
 	return {
-		get responseLength() {
-			return responseLength
+		get value() {
+			return value
 		},
-		set responseLength(value: ResponseLength) {
-			responseLength = value
-			localStorage.setItem('responseLength', value)
+		set value(newValue: T) {
+			value = newValue
+			localStorage.setItem(key, newValue)
 		},
 	}
 }
-
-export const responseLength = createResponseLengthState()

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import 'highlight.js/styles/atom-one-dark.min.css'
 	import { MODELS, PROVIDERS } from './lib/ai'
-	import { state as db, responseLength } from './lib/db.svelte'
-	import type { Model } from './lib/types'
+	import { state as db, persistedState } from './lib/db.svelte'
+	import type { Model, ResponseLength } from './lib/types'
 	import Panel from './lib/icons/Panel.svelte'
 	import Search from './lib/icons/Search.svelte'
 	import { convertFileToBase64 } from './lib/storage'
@@ -17,17 +17,24 @@
 
 	void db.init()
 
-	let currentModel = $state<Model['name']>('gemini-1.5-flash')
 	let showDialog = $state(false)
 	let showSidebar = $state(true)
 	let showSearch = $state(false)
 	let searchQuery = $state('')
 	let loading = $state(false)
+	let responseLength = persistedState<ResponseLength>(
+		'responseLength',
+		'medium'
+	)
+	let currentModel = persistedState<Model['name']>(
+		'currentModel',
+		'gemini-1.5-flash'
+	)
 
 	async function sendMessage(message: string, files: File[]) {
 		const chatId = db.currentChatId || (await db.addChat('New chat'))
 
-		const model = MODELS.find(m => m.name === currentModel)
+		const model = MODELS.find(m => m.name === currentModel.value)
 		if (!model) return alert('Invalid model')
 		const apiKey = db.apiKeys[model.provider]
 		if (!apiKey) return alert('No API key found for this model')
@@ -47,7 +54,7 @@
 					date: new Date(),
 				},
 				model,
-				responseLength.responseLength
+				responseLength.value
 			)
 			.finally(() => (loading = false))
 	}
@@ -133,11 +140,11 @@
 				spellcheck="false"
 			/>
 			<div class="flex gap-2 px-2 py-1">
-				<Select.Root type="single" required bind:value={currentModel}>
+				<Select.Root type="single" required bind:value={currentModel.value}>
 					<Select.Trigger
 						class="w-[180px] cursor-pointer border-none shadow-none hover:bg-cyan-100 dark:hover:bg-cyan-900"
 					>
-						{MODELS.filter(m => m.name === currentModel)[0].title}
+						{MODELS.filter(m => m.name === currentModel.value)[0].title}
 					</Select.Trigger>
 					<Select.Content>
 						{#each PROVIDERS as provider}
@@ -159,11 +166,11 @@
 					</Select.Content>
 				</Select.Root>
 
-				<Select.Root type="single" bind:value={responseLength.responseLength}>
+				<Select.Root type="single" bind:value={responseLength.value}>
 					<Select.Trigger
 						class="w-[100px] cursor-pointer border-none capitalize shadow-none hover:bg-cyan-100 dark:hover:bg-cyan-900"
 					>
-						{responseLength.responseLength}
+						{responseLength.value}
 					</Select.Trigger>
 					<Select.Content>
 						<Select.Item value="short">
