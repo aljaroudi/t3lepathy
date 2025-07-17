@@ -4,7 +4,7 @@
 	import Plus from '../icons/Plus.svelte'
 	import Gear from '../icons/Gear.svelte'
 	import { dateToRelativeTime } from '../date'
-	import { SearchIcon } from '@lucide/svelte'
+	import { SearchIcon, Trash2Icon } from '@lucide/svelte'
 
 	let {
 		onClose,
@@ -98,6 +98,15 @@
 							<span class="block w-full truncate" style="min-width: 0;">
 								{chat.title}
 							</span>
+							{#if db.currentChatId === chat.id}
+								<!-- svelte-ignore node_invalid_placement_ssr -->
+								<button
+									class="ml-auto cursor-pointer rounded-lg p-1 hover:bg-slate-200"
+									onclick={() => db.deleteChat(chat.id)}
+								>
+									<Trash2Icon size="1em" />
+								</button>
+							{/if}
 						</button>
 					{/each}
 				</div>

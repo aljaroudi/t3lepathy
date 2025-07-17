@@ -166,6 +166,19 @@ export let state = $state({
 		chat.title = await titlePromise
 		await db.put('chats', { ...chat })
 	},
+
+	async deleteChat(id: string) {
+		const db = await dbPromise
+		const tx = db.transaction('messages', 'readwrite')
+		const index = tx.store.index('chatId')
+		for await (const cursor of index.iterate(id)) {
+			await cursor.delete()
+		}
+		await tx.done
+		await db.delete('chats', id)
+		this.chats = this.chats.filter(c => c.id !== id)
+		if (this.currentChatId === id) this.currentChatId = null
+	},
 })
 
 const LENGTH_IN_SENTENCES: Record<ResponseLength, number | null> = {
