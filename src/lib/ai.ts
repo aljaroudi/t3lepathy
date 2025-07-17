@@ -71,6 +71,7 @@ export async function expectsImage({
 	message: ContextMessage
 	model: Model
 }): Promise<boolean> {
+	if (!model.capabilities.has('image-output')) return false
 	return generateText({
 		model: getModel(model),
 		system:
@@ -99,37 +100,50 @@ export const MODELS = [
 		provider: 'OpenAI',
 		title: 'GPT-4o Mini',
 		name: 'gpt-4o-mini',
-		description: 'Smallest, fast, cost-efficient',
+		description: 'Fast, cheap',
+		capabilities: new Set(['text-output', 'file-input']),
 	},
 	{
 		provider: 'OpenAI',
 		title: 'GPT-4o',
 		name: 'gpt-4o',
-		description: 'Balanced performance and cost',
+		description: 'Text + image input',
+		capabilities: new Set(['text-output', 'file-input', 'image-input']),
+	},
+	{
+		provider: 'OpenAI',
+		title: 'DALL·E 3',
+		name: 'dall-e-3',
+		description: 'Image generation only',
+		capabilities: new Set(['image-output']),
 	},
 	{
 		provider: 'Google',
 		title: 'Gemini 1.5 Flash',
 		name: 'gemini-1.5-flash',
-		description: 'Fastest, cost-efficient Gemini',
+		description: 'Fast, cheap Gemini model',
+		capabilities: new Set(['text-output', 'file-input']),
 	},
 	{
 		provider: 'Google',
-		title: 'Gemini 2.5 Flash (Preview)',
+		title: 'Gemini 2.5 Flash',
 		name: 'gemini-2.5-flash-preview-04-17',
-		description: 'Latest, powerful Gemini',
+		description: 'Fast, cheap',
+		capabilities: new Set(['text-output', 'file-input']),
 	},
 	{
 		provider: 'Google',
 		title: 'Gemini 1.5 Pro',
 		name: 'gemini-1.5-pro',
-		description: 'Balanced Gemini performance/cost',
+		description: 'Advanced Gemini',
+		capabilities: new Set(['text-output', 'file-input']),
 	},
 	{
 		provider: 'Anthropic',
 		title: 'Claude 3.5 Sonnet',
 		name: 'claude-3-5-sonnet-20240620',
-		description: 'Balanced Claude performance/cost',
+		description: 'Smart, balanced Claude',
+		capabilities: new Set(['text-output', 'file-input']),
 	},
 ] satisfies Model[]
 
