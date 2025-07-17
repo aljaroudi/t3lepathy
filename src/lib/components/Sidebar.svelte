@@ -32,7 +32,7 @@
 </script>
 
 <aside
-	class="flex flex-col gap-2 bg-gradient-to-b from-slate-100 to-slate-200 p-4 dark:bg-slate-800"
+	class="flex flex-col gap-2 bg-gradient-to-b from-slate-100 to-slate-200 p-4 dark:bg-slate-800 dark:from-cyan-950 dark:to-slate-950"
 >
 	<div class="my-1 flex items-center justify-between gap-2">
 		<button
@@ -43,7 +43,23 @@
 			<Panel />
 		</button>
 
-		<h1 class="text-xl font-thin tracking-widest text-shadow-lg">T3lepathy</h1>
+		<h1
+			class="w-full text-center text-xl font-thin tracking-widest text-shadow-lg"
+		>
+			T3lepathy
+		</h1>
+
+		<button
+			class="mt-auto size-10 cursor-pointer hover:animate-spin"
+			aria-label="Settings"
+			title="Settings"
+			aria-pressed={showDialog}
+			style="border-radius: 50%"
+			aria-busy={Object.keys(db.apiKeys).length === 0}
+			onclick={onShowDialog}
+		>
+			<Gear />
+		</button>
 	</div>
 	<!-- search box -->
 	<div
@@ -65,7 +81,10 @@
 			<Plus />
 		</button>
 	</div>
-	<div class="flex max-h-[calc(100vh-10rem)] flex-col gap-2 overflow-y-auto">
+	<div
+		class="flex flex-col gap-2 overflow-y-auto scroll-smooth"
+		style="max-height: calc(100dvh - 8rem)"
+	>
 		<div class="flex flex-col gap-2">
 			{#each Object.entries(groupedChats) as [date, chats]}
 				<div class="flex flex-col gap-2">
@@ -83,15 +102,4 @@
 			{/each}
 		</div>
 	</div>
-	<button
-		class="mt-auto w-fit cursor-pointer rounded-xl p-2 shadow-xs hover:animate-spin"
-		aria-label="Settings"
-		title="Settings"
-		aria-pressed={showDialog}
-		style="border-radius: 50%"
-		aria-busy={Object.keys(db.apiKeys).length === 0}
-		onclick={onShowDialog}
-	>
-		<Gear />
-	</button>
 </aside>
