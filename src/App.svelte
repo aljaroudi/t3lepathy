@@ -1,7 +1,7 @@
 <script lang="ts">
 	import 'highlight.js/styles/atom-one-dark.min.css'
 	import { MODELS, PROVIDERS } from './lib/ai'
-	import { state as db } from './lib/db.svelte'
+	import { state as db, responseLength } from './lib/db.svelte'
 	import type { Model } from './lib/types'
 	import Panel from './lib/icons/Panel.svelte'
 	import Search from './lib/icons/Search.svelte'
@@ -12,7 +12,7 @@
 	import { isValidApiKey } from './lib/validate'
 	import * as Select from './lib/components/ui/select/index'
 	import '@fontsource-variable/ibm-plex-sans'
-	import { LoaderCircle, LoaderCircleIcon } from '@lucide/svelte'
+	import { LoaderCircleIcon } from '@lucide/svelte'
 	import Bubble from './lib/components/Bubble.svelte'
 
 	void db.init()
@@ -47,7 +47,7 @@
 					date: new Date(),
 				},
 				model,
-				db.responseLength
+				responseLength.responseLength
 			)
 			.finally(() => (loading = false))
 	}
@@ -134,7 +134,9 @@
 			/>
 			<div class="flex gap-2 px-2 py-1">
 				<Select.Root type="single" required bind:value={currentModel}>
-					<Select.Trigger class="w-[180px]">
+					<Select.Trigger
+						class="w-[180px] cursor-pointer border-none shadow-none hover:bg-cyan-100 dark:hover:bg-cyan-900"
+					>
 						{MODELS.filter(m => m.name === currentModel)[0].title}
 					</Select.Trigger>
 					<Select.Content>
@@ -157,9 +159,11 @@
 					</Select.Content>
 				</Select.Root>
 
-				<Select.Root type="single" bind:value={db.responseLength}>
-					<Select.Trigger class="w-[100px] capitalize">
-						{db.responseLength}
+				<Select.Root type="single" bind:value={responseLength.responseLength}>
+					<Select.Trigger
+						class="w-[100px] cursor-pointer border-none capitalize shadow-none hover:bg-cyan-100 dark:hover:bg-cyan-900"
+					>
+						{responseLength.responseLength}
 					</Select.Trigger>
 					<Select.Content>
 						<Select.Item value="short">

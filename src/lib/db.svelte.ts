@@ -31,12 +31,6 @@ export let state = $state({
 		localStorage.setItem('apiKeys', JSON.stringify(value))
 	},
 
-	responseLength:
-		(localStorage.getItem('responseLength') as ResponseLength) || 'medium',
-	setResponseLength(value: ResponseLength) {
-		localStorage.setItem('responseLength', value)
-	},
-
 	async init() {
 		const db = await dbPromise
 		// get chats
@@ -186,3 +180,21 @@ export function getApiKeys() {
 	if (!keys) return {} as Record<Provider, string>
 	return JSON.parse(keys) as Record<Provider, string>
 }
+
+function createResponseLengthState() {
+	let responseLength = $state<ResponseLength>(
+		(localStorage.getItem('responseLength') as ResponseLength) || 'medium'
+	)
+
+	return {
+		get responseLength() {
+			return responseLength
+		},
+		set responseLength(value: ResponseLength) {
+			responseLength = value
+			localStorage.setItem('responseLength', value)
+		},
+	}
+}
+
+export const responseLength = createResponseLengthState()
