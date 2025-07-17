@@ -94,16 +94,9 @@ export let state = $state({
 
 		const shouldAutoRename = this.messages.length === 0
 
-		if (shouldAutoRename) {
-			const chat = this.chats.find(c => c.id === msg.chatId)
-			if (!chat) return
-			chat.title = ''
-			const titleStream = generateTitle({ message: firstMessage, model })
-			for await (const chunk of titleStream) {
-				chat.title += chunk
-				await db.put('chats', { ...chat })
-			}
-		}
+		const titlePromise = shouldAutoRename
+			? generateTitle({ message: firstMessage, model })
+			: null
 		// 1. Add user message to db
 		await db.put('messages', msg)
 		this.messages.push(msg)
@@ -166,6 +159,12 @@ export let state = $state({
 			const messageToStore = JSON.parse(JSON.stringify(this.messages[msgIdx]))
 			await db.put('messages', messageToStore)
 		}
+
+		if (!titlePromise) return
+		const chat = this.chats.find(c => c.id === msg.chatId)
+		if (!chat) return
+		chat.title = await titlePromise
+		await db.put('chats', { ...chat })
 	},
 })
 
