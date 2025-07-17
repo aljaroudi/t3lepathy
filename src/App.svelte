@@ -57,6 +57,7 @@
 				model,
 				responseLength.value
 			)
+			.catch(() => alert('Error sending message'))
 			.finally(() => (loading = null))
 	}
 </script>
