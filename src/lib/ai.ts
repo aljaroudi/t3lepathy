@@ -152,3 +152,15 @@ export const PROVIDERS = ['Google', 'OpenAI', 'Anthropic'] satisfies Provider[]
 function getSeed() {
 	return Math.floor(Math.random() * 1_000_000)
 }
+
+export function getFileTypes(model: Model) {
+	let types = ''
+	if (model.capabilities.has('file-input')) {
+		types +=
+			'.pdf,.doc,.docx,.txt,.md,.rtf,.csv,.xls,.xlsx,.ppt,.pptx,.json,.xml,.html,.js,.ts,.jsx,.tsx,.py,.java,.c,.cpp,.cs,.go,.rb,.php,.sh,.swift,.rs,.kt,.m,.h,.sql,.yml,.yaml,.toml,.ini,.bat,.pl,.lua,.r,.ipynb,.tex,.scss,.sass,.less,.css,'
+	}
+	if (model.capabilities.has('image-input')) {
+		types += 'image/*,'
+	}
+	return types.slice(0, -1)
+}
