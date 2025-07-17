@@ -12,7 +12,7 @@
 	import { isValidApiKey } from './lib/validate'
 	import * as Select from './lib/components/ui/select/index'
 	import '@fontsource-variable/ibm-plex-sans'
-	import { LoaderCircle } from '@lucide/svelte'
+	import { LoaderCircle, LoaderCircleIcon } from '@lucide/svelte'
 	import Bubble from './lib/components/Bubble.svelte'
 
 	void db.init()
@@ -100,7 +100,7 @@
 				{/each}
 				{#if loading}
 					<div class="flex animate-spin items-center justify-center">
-						<LoaderCircle />
+						<LoaderCircleIcon />
 					</div>
 				{/if}
 			</div>
