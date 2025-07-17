@@ -7,13 +7,14 @@
 	let { message }: { message: Message } = $props()
 
 	const attachments = message.content.filter(part => part.type !== 'text')
+	const maxWidth = message.role === 'user' ? '60ch' : '80ch'
 </script>
 
 <div
 	class={message.role === 'user'
 		? 'my-2 ml-auto rounded-2xl rounded-br-none bg-zinc-100 px-4 py-2 text-slate-800 shadow-xs'
 		: ''}
-	style="max-width: {message.role === 'user' ? '60ch' : '80ch'}"
+	style="max-width: min(calc(100% - 1rem), {maxWidth})"
 >
 	{#each message.content.filter(part => part.type === 'text') as TextPart[] as part}
 		{@html marked.parse(part.text)}
