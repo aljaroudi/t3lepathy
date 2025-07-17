@@ -4,6 +4,7 @@
 	import Plus from '../icons/Plus.svelte'
 	import Gear from '../icons/Gear.svelte'
 	import { dateToRelativeTime } from '../date'
+	import { SearchIcon } from '@lucide/svelte'
 
 	let {
 		onClose,
@@ -19,8 +20,14 @@
 		onShowDialog: () => void
 	} = $props()
 
+	let searchQuery = $state('')
 	const groupedChats = $derived(
-		Object.groupBy(db.chats, chat => dateToRelativeTime(chat.date))
+		Object.groupBy(
+			db.chats.filter(chat =>
+				chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+			),
+			chat => dateToRelativeTime(chat.date)
+		)
 	)
 </script>
 
@@ -37,6 +44,20 @@
 		</button>
 
 		<h1 class="text-xl font-thin tracking-widest text-shadow-lg">T3lepathy</h1>
+	</div>
+	<!-- search box -->
+	<div
+		class="flex w-full items-center gap-1 border-b border-slate-200 pb-2 text-sm"
+	>
+		<span class="p-2">
+			<SearchIcon size="1.2em" class="text-slate-400" />
+		</span>
+		<input
+			type="text"
+			placeholder="Search"
+			class="w-full border-none bg-transparent p-0 outline-none focus:ring-0"
+			bind:value={searchQuery}
+		/>
 		<button
 			class="flex cursor-pointer items-center justify-center rounded-full bg-linear-to-br from-cyan-500 to-cyan-600 p-2 text-white hover:bg-cyan-600 hover:text-white dark:text-white"
 			onclick={onCreateChat}
