@@ -14,7 +14,7 @@
 	class={message.role === 'user'
 		? 'my-2 ml-auto rounded-2xl rounded-br-none bg-zinc-100 px-4 py-2 text-slate-800 shadow-xs'
 		: ''}
-	style="max-width: min(calc(100% - 1rem), {maxWidth})"
+	style="width: min(var(--content-width), {maxWidth})"
 >
 	{#each message.content.filter(part => part.type === 'text') as TextPart[] as part}
 		{@html marked.parse(part.text)}
