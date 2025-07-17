@@ -32,7 +32,7 @@
 </script>
 
 <aside
-	class="flex max-h-dvh flex-col gap-2 bg-linear-to-b from-slate-100 to-slate-200 p-4 dark:bg-slate-800 dark:from-cyan-950 dark:to-slate-950"
+	class="flex max-h-dvh flex-col gap-4 bg-linear-to-b from-slate-100 to-slate-200 p-4 dark:bg-slate-800 dark:from-cyan-950 dark:to-slate-950"
 >
 	<div class="my-1 flex items-center justify-between gap-2">
 		<button
