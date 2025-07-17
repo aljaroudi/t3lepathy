@@ -91,11 +91,13 @@
 					<h2 class="text-sm font-thin">{date}</h2>
 					{#each chats as chat}
 						<button
-							class="flex cursor-pointer truncate rounded-lg p-2 text-left hover:bg-white aria-pressed:bg-white aria-pressed:shadow-xs dark:text-slate-200 dark:aria-pressed:bg-slate-200 dark:aria-pressed:text-slate-800"
+							class="flex cursor-pointer rounded-lg p-2 text-left hover:bg-white aria-pressed:bg-white aria-pressed:shadow-xs dark:text-slate-200 dark:aria-pressed:bg-slate-200 dark:aria-pressed:text-slate-800"
 							aria-pressed={db.currentChatId === chat.id}
 							onclick={() => onSelectChat(chat.id)}
 						>
-							{chat.title}
+							<span class="block w-full truncate" style="min-width: 0;">
+								{chat.title}
+							</span>
 						</button>
 					{/each}
 				</div>
