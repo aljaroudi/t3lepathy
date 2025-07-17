@@ -12,7 +12,7 @@
 	import { isValidApiKey } from './lib/validate'
 	import * as Select from './lib/components/ui/select/index'
 	import '@fontsource-variable/ibm-plex-sans'
-	import { LoaderCircleIcon, PaperclipIcon } from '@lucide/svelte'
+	import { PaperclipIcon } from '@lucide/svelte'
 	import Bubble from './lib/components/Bubble.svelte'
 	import LengthIcon from './lib/components/LengthIcon.svelte'
 
@@ -192,7 +192,7 @@
 
 				<button
 					type="button"
-					class="size-9 cursor-pointer rounded-lg hover:bg-cyan-900"
+					class="size-9 cursor-pointer rounded-lg hover:bg-cyan-100 dark:hover:bg-cyan-900 dark:hover:text-white"
 					onclick={() => document.getElementById('file')?.click()}
 				>
 					<PaperclipIcon size={16} class="mx-auto" />
