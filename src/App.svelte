@@ -22,7 +22,7 @@
 	let showSidebar = $state(true)
 	let showSearch = $state(false)
 	let searchQuery = $state('')
-	let loading = $state(false)
+	let loading = $state<string | null>(null)
 	let responseLength = persistedState<ResponseLength>(
 		'responseLength',
 		'medium'
@@ -40,12 +40,12 @@
 		const apiKey = db.apiKeys[model.provider]
 		if (!apiKey) return alert('No API key found for this model')
 		// User
-
-		loading = true
+		const msgId = crypto.randomUUID()
+		loading = msgId
 		await db
 			.addMessage(
 				{
-					id: crypto.randomUUID(),
+					id: msgId,
 					chatId,
 					content: [
 						{ type: 'text' as const, text: message },
@@ -57,7 +57,7 @@
 				model,
 				responseLength.value
 			)
-			.finally(() => (loading = false))
+			.finally(() => (loading = null))
 	}
 </script>
 
@@ -104,13 +104,8 @@
 				style="width: var(--content-width)"
 			>
 				{#each db.messages as message}
-					<Bubble {message} />
+					<Bubble {message} loading={loading === message.id} />
 				{/each}
-				{#if loading}
-					<div class="flex animate-spin items-center justify-center">
-						<LoaderCircleIcon />
-					</div>
-				{/if}
 			</div>
 		</div>
 		<!-- Floating input form -->
