@@ -4,7 +4,7 @@
 	import { marked } from './markdown'
 	import { cn } from '../utils'
 
-	let { message }: { message: Message } = $props()
+	let { message, loading }: { message: Message; loading: boolean } = $props()
 
 	const attachments = message.content.filter(part => part.type !== 'text')
 	const maxWidth = message.role === 'user' ? '60ch' : '80ch'
@@ -12,9 +12,10 @@
 
 <div
 	class={message.role === 'user'
-		? 'my-2 ml-auto rounded-2xl rounded-br-none bg-zinc-100 px-4 py-2 text-slate-800 shadow-xs'
+		? 'my-2 ml-auto rounded-2xl rounded-br-none bg-zinc-100 px-4 py-2 text-slate-800 shadow-xs aria-busy:animate-pulse'
 		: ''}
 	style="max-width: min(var(--content-width), {maxWidth})"
+	aria-busy={loading}
 >
 	{#each message.content.filter(part => part.type === 'text') as TextPart[] as part}
 		{@html marked.parse(part.text)}
