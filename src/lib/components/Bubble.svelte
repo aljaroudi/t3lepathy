@@ -2,6 +2,7 @@
 	import type { TextPart } from 'ai'
 	import type { Message } from '../types'
 	import { marked } from './markdown'
+	import { cn } from '../utils'
 
 	let { message }: { message: Message } = $props()
 
@@ -24,7 +25,10 @@
 					<img
 						src={attachment.image}
 						alt="Message attachment"
-						class="size-20 rounded-lg object-cover"
+						class={cn(
+							'rounded-lg object-cover',
+							message.role === 'user' ? 'size-20' : 'max-h-[512px]'
+						)}
 					/>
 				{:else if attachment.type === 'file'}
 					<p class="rounded-full bg-cyan-700 px-3 py-1 text-sm text-white">
