@@ -14,6 +14,7 @@
 	import '@fontsource-variable/ibm-plex-sans'
 	import { LoaderCircleIcon } from '@lucide/svelte'
 	import Bubble from './lib/components/Bubble.svelte'
+	import LengthIcon from './lib/components/LengthIcon.svelte'
 
 	void db.init()
 
@@ -170,7 +171,7 @@
 					<Select.Trigger
 						class="w-[100px] cursor-pointer border-none capitalize shadow-none hover:bg-cyan-100 dark:hover:bg-cyan-900"
 					>
-						{responseLength.value}
+						<LengthIcon length={responseLength.value} />
 					</Select.Trigger>
 					<Select.Content>
 						<Select.Item value="short">
