@@ -50,6 +50,11 @@ export interface ChatDB extends DBSchema {
 type OpenAIModel = Parameters<ReturnType<typeof createOpenAI>>[0]
 type GoogleModel = Parameters<ReturnType<typeof createGoogleGenerativeAI>>[0]
 type AnthropicModel = Parameters<ReturnType<typeof createAnthropic>>[0]
+type Capabilities =
+	| 'image-input'
+	| 'file-input'
+	| 'text-output'
+	| 'image-output'
 
 export type Model =
 	| {
@@ -57,18 +62,21 @@ export type Model =
 			name: OpenAIModel
 			title: string
 			description: string
+			capabilities: Set<Capabilities>
 	  }
 	| {
 			provider: 'Google'
 			name: GoogleModel
 			title: string
 			description: string
+			capabilities: Set<Capabilities>
 	  }
 	| {
 			provider: 'Anthropic'
 			name: AnthropicModel
 			title: string
 			description: string
+			capabilities: Set<Capabilities>
 	  }
 
 type Provider = Model['provider']

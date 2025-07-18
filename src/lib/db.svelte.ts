@@ -31,12 +31,6 @@ export let state = $state({
 		localStorage.setItem('apiKeys', JSON.stringify(value))
 	},
 
-	responseLength:
-		(localStorage.getItem('responseLength') as ResponseLength) || 'medium',
-	setResponseLength(value: ResponseLength) {
-		localStorage.setItem('responseLength', value)
-	},
-
 	async init() {
 		const db = await dbPromise
 		// get chats
@@ -91,7 +85,8 @@ export let state = $state({
 	async addMessage(
 		msg: Extract<Message, { role: 'user' }>,
 		model: Model,
-		responseLength: ResponseLength
+		responseLength: ResponseLength,
+		grounding: boolean
 	) {
 		const db = await dbPromise
 
@@ -100,16 +95,9 @@ export let state = $state({
 
 		const shouldAutoRename = this.messages.length === 0
 
-		if (shouldAutoRename) {
-			const chat = this.chats.find(c => c.id === msg.chatId)
-			if (!chat) return
-			chat.title = ''
-			const titleStream = generateTitle({ message: firstMessage, model })
-			for await (const chunk of titleStream) {
-				chat.title += chunk
-				await db.put('chats', { ...chat })
-			}
-		}
+		const titlePromise = shouldAutoRename
+			? generateTitle({ message: firstMessage })
+			: null
 		// 1. Add user message to db
 		await db.put('messages', msg)
 		this.messages.push(msg)
@@ -156,6 +144,7 @@ export let state = $state({
 			messages: chatHistory,
 			model,
 			maxWords: LENGTH_IN_SENTENCES[responseLength],
+			grounding,
 		})
 
 		/** index of the text part of the response */
@@ -172,6 +161,25 @@ export let state = $state({
 			const messageToStore = JSON.parse(JSON.stringify(this.messages[msgIdx]))
 			await db.put('messages', messageToStore)
 		}
+
+		if (!titlePromise) return
+		const chat = this.chats.find(c => c.id === msg.chatId)
+		if (!chat) return
+		chat.title = await titlePromise
+		await db.put('chats', { ...chat })
+	},
+
+	async deleteChat(id: string) {
+		const db = await dbPromise
+		const tx = db.transaction('messages', 'readwrite')
+		const index = tx.store.index('chatId')
+		for await (const cursor of index.iterate(id)) {
+			await cursor.delete()
+		}
+		await tx.done
+		await db.delete('chats', id)
+		this.chats = this.chats.filter(c => c.id !== id)
+		if (this.currentChatId === id) this.currentChatId = null
 	},
 })
 
@@ -186,3 +194,27 @@ export function getApiKeys() {
 	if (!keys) return {} as Record<Provider, string>
 	return JSON.parse(keys) as Record<Provider, string>
 }
+
+export function persistedState<T extends string>(key: string, initialValue: T) {
+	let value = $state<T>((localStorage.getItem(key) as T) || initialValue)
+
+	return {
+		get value() {
+			return value
+		},
+		set value(newValue: T) {
+			value = newValue
+			localStorage.setItem(key, newValue)
+		},
+	}
+}
+
+export const systemPrompt = persistedState<string>(
+	'systemPrompt',
+	'You are a friendly assistant!'
+)
+
+export const titleModel = persistedState<Model['name']>(
+	'titleModel',
+	'gemini-2.0-flash-lite'
+)

@@ -7,12 +7,14 @@ code.hljs {
   margin-block: 0.5rem;
 }
 
-pre {
-  max-width: 60ch;
+@theme {
+  --font-sans: 'IBM Plex Sans', sans-serif;
 }
 
-
 :root {
+  --sidebar-width: 240px;
+  --page-width: calc(100dvw - var(--sidebar-width));
+  --content-width: calc(min(800px, var(--page-width)) - 2rem);
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.147 0.004 49.25);
@@ -127,4 +129,9 @@ pre {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+
+main[data-sidebar="false"] {
+  --sidebar-width: 0px;
 }
