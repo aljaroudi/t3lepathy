@@ -130,8 +130,9 @@
 					.filter(f => f instanceof File && f.name !== '') as File[]
 				if (!message.trim()) return
 				sendMessage(message.trim(), files)
-				const messageInput = e.currentTarget.querySelector('input')
-				if (messageInput) messageInput.value = ''
+				textInput.value = ''
+				const fileInput = document.getElementById('file') as HTMLInputElement
+				fileInput.value = ''
 			}}
 		>
 			<textarea
@@ -219,6 +220,7 @@
 					accept={getFileTypes(currentModel)}
 				/>
 				<button
+					id="submit"
 					type="submit"
 					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-radial-[at_25%_25%] from-cyan-500 to-cyan-700 to-75% text-lg text-white shadow-lg hover:bg-radial-[at_50%_50%] disabled:cursor-not-allowed disabled:opacity-50"
 					disabled={!textInput.value.trim().length}
@@ -240,6 +242,8 @@
 	onkeydown={e => {
 		if (e.key === 'Escape') {
 			showDialog = showSearch = false
+		} else if (e.key === 'Enter' && e.metaKey) {
+			document.getElementById('submit')?.click()
 		} else if (e.key === 'b' && e.metaKey) {
 			showSidebar = !showSidebar
 		} else if (e.key === 'k' && e.metaKey) {
