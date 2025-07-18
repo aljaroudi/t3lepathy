@@ -60,6 +60,10 @@
 			.catch(() => alert('Error sending message'))
 			.finally(() => (loading = null))
 	}
+
+	function jumpToTextInput() {
+		document.getElementById('message')?.focus()
+	}
 </script>
 
 <main
@@ -70,7 +74,10 @@
 	{#if showSidebar}
 		<Sidebar
 			onClose={() => (showSidebar = false)}
-			onCreateChat={() => db.addChat('New chat')}
+			onCreateChat={() => {
+				if (db.messages.length) db.addChat('New chat')
+				jumpToTextInput()
+			}}
 			onSelectChat={chatId => db.setCurrentChat(chatId)}
 			{showDialog}
 			onShowDialog={() => (showDialog = true)}
@@ -127,6 +134,7 @@
 			}}
 		>
 			<input
+				id="message"
 				name="message"
 				type="text"
 				class="border-none bg-transparent p-2 outline-none focus:ring-0 dark:text-slate-200"
