@@ -7,12 +7,11 @@
 	import Search from './lib/icons/Search.svelte'
 	import { convertFileToBase64 } from './lib/storage'
 	import Sidebar from './lib/components/Sidebar.svelte'
-	import Plus from './lib/icons/Plus.svelte'
 	import Arrow from './lib/icons/Arrow.svelte'
 	import { isValidApiKey } from './lib/validate'
 	import * as Select from './lib/components/ui/select/index'
 	import '@fontsource-variable/ibm-plex-sans'
-	import { PaperclipIcon } from '@lucide/svelte'
+	import { PaperclipIcon, PlusIcon } from '@lucide/svelte'
 	import Bubble from './lib/components/Bubble.svelte'
 	import LengthIcon from './lib/components/LengthIcon.svelte'
 
@@ -92,7 +91,7 @@
 				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
 				onclick={() => db.addChat('New chat')}
 			>
-				<Plus />
+				<PlusIcon size="1em" />
 			</button>
 		</div>
 	{/if}
@@ -210,7 +209,7 @@
 				/>
 				<button
 					type="submit"
-					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-radial-[at_25%_25%] from-cyan-500 to-cyan-700 to-75% text-lg text-white hover:bg-radial-[at_50%_50%]"
+					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-radial-[at_25%_25%] from-cyan-500 to-cyan-700 to-75% text-lg text-white shadow-lg hover:bg-radial-[at_50%_50%]"
 				>
 					<Arrow />
 				</button>
@@ -263,14 +262,14 @@
 				<p class="flex items-center gap-2 text-lg text-gray-500">
 					<Search />
 					<span class="text-gray-200">/</span>
-					<Plus />
+					<PlusIcon size="1em" />
 				</p>
 				<button
 					class="absolute top-2 right-2 text-gray-500 hover:text-black"
 					style="transform: rotate(45deg)"
 					onclick={() => (showSearch = false)}
 				>
-					<Plus />
+					<PlusIcon size="1em" />
 				</button>
 				<!-- svelte-ignore a11y_autofocus -->
 				<input

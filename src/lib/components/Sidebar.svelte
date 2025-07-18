@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { state as db } from '../db.svelte'
 	import Panel from '../icons/Panel.svelte'
-	import Plus from '../icons/Plus.svelte'
 	import { dateToRelativeTime } from '../date'
-	import { SearchIcon, Settings, Trash2Icon } from '@lucide/svelte'
+	import { PlusIcon, SearchIcon, Settings, Trash2Icon } from '@lucide/svelte'
 
 	let {
 		onClose,
@@ -74,10 +73,10 @@
 			bind:value={searchQuery}
 		/>
 		<button
-			class="flex cursor-pointer items-center justify-center rounded-full bg-radial-[at_25%_25%] from-cyan-500 to-cyan-700 to-75% p-2 text-lg text-white hover:bg-radial-[at_50%_50%]"
+			class="flex cursor-pointer items-center justify-center rounded-full bg-radial-[at_25%_25%] from-cyan-500 to-cyan-700 to-75% p-2 text-lg text-white shadow hover:bg-radial-[at_50%_50%]"
 			onclick={onCreateChat}
 		>
-			<Plus />
+			<PlusIcon size="1em" />
 		</button>
 	</div>
 	<div
