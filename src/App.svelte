@@ -30,6 +30,7 @@
 		'currentModel',
 		'gemini-1.5-flash'
 	)
+	let textInput = persistedState<string>('textInput', '')
 	const currentModel = $derived(
 		MODELS.find(m => m.name === currentModelId.value)!
 	)
@@ -133,17 +134,19 @@
 				if (messageInput) messageInput.value = ''
 			}}
 		>
-			<input
+			<textarea
 				id="message"
 				name="message"
-				type="text"
-				class="border-none bg-transparent p-2 outline-none focus:ring-0 dark:text-slate-200"
+				class="resize-none border-none bg-transparent p-2 outline-none focus:ring-0 dark:text-slate-200"
 				placeholder="Type your message..."
 				minLength={1}
 				required
 				autocomplete="off"
 				spellcheck="false"
-			/>
+				bind:value={textInput.value}
+				oninput={({ currentTarget: { value } }) =>
+					(textInput.value = value.trimStart())}
+			></textarea>
 			<div class="flex gap-2 px-2 py-1">
 				<Select.Root type="single" required bind:value={currentModelId.value}>
 					<Select.Trigger
@@ -217,7 +220,8 @@
 				/>
 				<button
 					type="submit"
-					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-radial-[at_25%_25%] from-cyan-500 to-cyan-700 to-75% text-lg text-white shadow-lg hover:bg-radial-[at_50%_50%]"
+					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-radial-[at_25%_25%] from-cyan-500 to-cyan-700 to-75% text-lg text-white shadow-lg hover:bg-radial-[at_50%_50%] disabled:cursor-not-allowed disabled:opacity-50"
+					disabled={!textInput.value.trim().length}
 				>
 					<Arrow />
 				</button>
