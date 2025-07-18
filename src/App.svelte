@@ -29,7 +29,7 @@
 	)
 	let currentModelId = persistedState<Model['name']>(
 		'currentModel',
-		'gemini-1.5-flash'
+		'gemini-2.0-flash-lite'
 	)
 	let textInput = persistedState<string>('textInput', '')
 	const currentModel = $derived(
@@ -57,7 +57,8 @@
 					date: new Date(),
 				},
 				currentModel,
-				responseLength.value
+				responseLength.value,
+				grounding
 			)
 			.catch(() => alert('Error sending message'))
 			.finally(() => (loading = null))

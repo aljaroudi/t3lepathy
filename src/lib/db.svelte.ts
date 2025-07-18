@@ -85,7 +85,8 @@ export let state = $state({
 	async addMessage(
 		msg: Extract<Message, { role: 'user' }>,
 		model: Model,
-		responseLength: ResponseLength
+		responseLength: ResponseLength,
+		grounding: boolean
 	) {
 		const db = await dbPromise
 
@@ -143,6 +144,7 @@ export let state = $state({
 			messages: chatHistory,
 			model,
 			maxWords: LENGTH_IN_SENTENCES[responseLength],
+			grounding,
 		})
 
 		/** index of the text part of the response */
@@ -214,5 +216,5 @@ export const systemPrompt = persistedState<string>(
 
 export const titleModel = persistedState<Model['name']>(
 	'titleModel',
-	'gemini-1.5-flash'
+	'gemini-2.0-flash-lite'
 )
