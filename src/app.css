@@ -7,6 +7,10 @@ code.hljs {
   margin-block: 0.5rem;
 }
 
+@theme {
+  --font-sans: 'IBM Plex Sans', sans-serif;
+}
+
 :root {
   --sidebar-width: 240px;
   --page-width: calc(100dvw - var(--sidebar-width));

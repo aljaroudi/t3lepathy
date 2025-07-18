@@ -253,13 +253,3 @@
 		}
 	}}
 />
-
-<style>
-	:global(body) {
-		font-family: 'IBM Plex Sans', sans-serif;
-	}
-	[aria-invalid='true'] {
-		border-color: red;
-		background-color: red;
-	}
-</style>
