@@ -2,9 +2,8 @@
 	import { state as db } from '../db.svelte'
 	import Panel from '../icons/Panel.svelte'
 	import Plus from '../icons/Plus.svelte'
-	import Gear from '../icons/Gear.svelte'
 	import { dateToRelativeTime } from '../date'
-	import { SearchIcon, Trash2Icon } from '@lucide/svelte'
+	import { SearchIcon, Settings, Trash2Icon } from '@lucide/svelte'
 
 	let {
 		onClose,
@@ -50,7 +49,7 @@
 		</h1>
 
 		<button
-			class="mt-auto size-10 cursor-pointer hover:animate-spin"
+			class="mt-auto size-10 cursor-pointer"
 			aria-label="Settings"
 			title="Settings"
 			aria-pressed={showDialog}
@@ -58,7 +57,7 @@
 			aria-busy={Object.keys(db.apiKeys).length === 0}
 			onclick={onShowDialog}
 		>
-			<Gear />
+			<Settings size="1em" class="hover:animate-spin" />
 		</button>
 	</div>
 	<!-- search box -->
