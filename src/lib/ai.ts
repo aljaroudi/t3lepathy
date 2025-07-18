@@ -9,13 +9,15 @@ import { createAnthropic } from '@ai-sdk/anthropic'
 import type { ContextMessage, Model, Provider } from './types'
 import { getApiKeys, titleModel } from './db.svelte'
 
-function getModel(model: Model) {
+function getModel(model: Model, useSearchGrounding: boolean) {
 	const apiKey = getApiKeys()[model.provider]
 	switch (model.provider) {
 		case 'OpenAI':
 			return createOpenAI({ apiKey })(model.name)
 		case 'Google':
-			return createGoogleGenerativeAI({ apiKey })(model.name)
+			return createGoogleGenerativeAI({ apiKey })(model.name, {
+				useSearchGrounding,
+			})
 		case 'Anthropic':
 			return createAnthropic({ apiKey })(model.name)
 	}
@@ -46,14 +48,16 @@ export function generateResponse({
 	messages,
 	model,
 	maxWords,
+	grounding,
 }: {
 	messages: ContextMessage[]
 	model: Model
 	maxWords: number | null
+	grounding: boolean
 }) {
 	const systemPrompt = 'You are a friendly assistant!'
 	const result = streamText({
-		model: getModel(model),
+		model: getModel(model, grounding),
 		system: maxWords
 			? systemPrompt + ` You will respond in ${maxWords} sentences.`
 			: systemPrompt,
@@ -73,7 +77,7 @@ export async function expectsImage({
 }): Promise<boolean> {
 	if (!model.capabilities.has('image-output')) return false
 	return generateText({
-		model: getModel(model),
+		model: getModel(model, false),
 		system:
 			"You are a helpful assistant that can determine if a message expects an image. If it does, return 'true'. If it doesn't, return 'false'. If you are not sure, return 'false'.",
 		messages: [{ role: 'user', content: message.content }],
@@ -82,7 +86,7 @@ export async function expectsImage({
 
 export async function generateTitle({ message }: { message: string }) {
 	return generateText({
-		model: getModel(MODELS.find(m => m.name === titleModel.value)!),
+		model: getModel(MODELS.find(m => m.name === titleModel.value)!, false),
 		system:
 			"Generate a short, descriptive title (max 5 words) for this conversation based on the user's first message. The title should capture the main topic or purpose of the discussion.",
 		messages: [{ role: 'user', content: message }],

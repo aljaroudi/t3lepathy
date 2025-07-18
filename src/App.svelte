@@ -9,7 +9,7 @@
 	import Arrow from './lib/icons/Arrow.svelte'
 	import * as Select from './lib/components/ui/select/index'
 	import '@fontsource-variable/ibm-plex-sans'
-	import { PaperclipIcon, PlusIcon } from '@lucide/svelte'
+	import { PaperclipIcon, PlusIcon, SearchIcon } from '@lucide/svelte'
 	import Bubble from './lib/components/Bubble.svelte'
 	import LengthIcon from './lib/components/LengthIcon.svelte'
 	import SettingsDialog from './lib/components/SettingsDialog.svelte'
@@ -21,6 +21,7 @@
 	let showSidebar = $state(true)
 	let showSearch = $state(false)
 	let searchQuery = $state('')
+	let grounding = $state(false)
 	let loading = $state<string | null>(null)
 	let responseLength = persistedState<ResponseLength>(
 		'responseLength',
@@ -205,11 +206,21 @@
 
 				<button
 					type="button"
-					class="size-9 cursor-pointer rounded-lg hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-cyan-900 dark:hover:text-white"
+					class="size-9 cursor-pointer rounded-lg hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-cyan-100 dark:hover:bg-cyan-900 dark:hover:text-white dark:aria-pressed:bg-cyan-900"
 					onclick={() => document.getElementById('file')?.click()}
 					disabled={getFileTypes(currentModel).length === 0}
+					title="Attach files"
 				>
 					<PaperclipIcon size={16} class="mx-auto" />
+				</button>
+				<button
+					type="button"
+					class="size-9 cursor-pointer rounded-lg hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-cyan-100 dark:hover:bg-cyan-900 dark:hover:text-white dark:aria-pressed:bg-cyan-900"
+					onclick={() => (grounding = !grounding)}
+					aria-pressed={grounding}
+					title="Toggle search grounding"
+				>
+					<SearchIcon size={16} class="mx-auto" />
 				</button>
 				<input
 					type="file"
