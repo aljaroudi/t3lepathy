@@ -4,16 +4,16 @@
 	import { state as db, persistedState } from './lib/db.svelte'
 	import type { Model, ResponseLength } from './lib/types'
 	import Panel from './lib/icons/Panel.svelte'
-	import Search from './lib/icons/Search.svelte'
 	import { convertFileToBase64 } from './lib/storage'
 	import Sidebar from './lib/components/Sidebar.svelte'
 	import Arrow from './lib/icons/Arrow.svelte'
-	import { isValidApiKey } from './lib/validate'
 	import * as Select from './lib/components/ui/select/index'
 	import '@fontsource-variable/ibm-plex-sans'
 	import { PaperclipIcon, PlusIcon } from '@lucide/svelte'
 	import Bubble from './lib/components/Bubble.svelte'
 	import LengthIcon from './lib/components/LengthIcon.svelte'
+	import SettingsDialog from './lib/components/SettingsDialog.svelte'
+	import SearchDialog from './lib/components/SearchDialog.svelte'
 
 	void db.init()
 
@@ -231,107 +231,9 @@
 </main>
 
 {#if showDialog}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs"
-	>
-		<div class="relative min-w-[300px] rounded-xl bg-white p-6 shadow-lg">
-			<button
-				class="absolute top-2 right-2 text-gray-500 hover:text-black"
-				onclick={() => (showDialog = false)}
-				>&times;
-			</button>
-			<h2 class="mb-2 text-xl font-bold">Settings</h2>
-
-			<!-- providers -->
-			<div class="flex flex-col gap-2">
-				<span class="text-sm text-gray-500">API keys</span>
-				{#each PROVIDERS as provider}
-					<div class="grid grid-cols-4 items-center gap-2">
-						<label for={`apiKey-${provider}`}>{provider}</label>
-						<input
-							type="text"
-							name={`apiKey-${provider}`}
-							id={`apiKey-${provider}`}
-							placeholder={`${provider} API key`}
-							class="col-span-3 rounded-lg border border-gray-200 bg-white p-2 aria-disabled:border-rose-500 dark:bg-slate-100 dark:text-slate-800"
-							aria-disabled={!isValidApiKey(provider, db.apiKeys[provider])}
-							value={db.apiKeys[provider] || ''}
-							oninput={({ currentTarget: { value } }) => {
-								db.apiKeys = { ...db.apiKeys, [provider]: value }
-							}}
-						/>
-					</div>
-				{/each}
-			</div>
-		</div>
-	</div>
+	<SettingsDialog {showDialog} />
 {:else if showSearch}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs"
-	>
-		<div class="relative min-w-[60ch] rounded-xl bg-white shadow-lg">
-			<div class="mx-2 flex items-center gap-2 border-b border-gray-200">
-				<p class="flex items-center gap-2 text-lg text-gray-500">
-					<Search />
-					<span class="text-gray-200">/</span>
-					<PlusIcon size="1em" />
-				</p>
-				<button
-					class="absolute top-2 right-2 text-gray-500 hover:text-black"
-					style="transform: rotate(45deg)"
-					onclick={() => (showSearch = false)}
-				>
-					<PlusIcon size="1em" />
-				</button>
-				<!-- svelte-ignore a11y_autofocus -->
-				<input
-					type="text"
-					name="search"
-					id="search"
-					placeholder="Search..."
-					class="w-full border-none p-2 outline-none focus:ring-0"
-					bind:value={searchQuery}
-					autofocus
-				/>
-			</div>
-			<div class="flex flex-col gap-2">
-				{#if searchQuery.length}
-					{@const filteredMessages = db.chats
-						.filter(chat =>
-							chat.title.toLowerCase().includes(searchQuery.toLowerCase())
-						)
-						.slice(0, 5)}
-					{#if filteredMessages.length}
-						{#each filteredMessages as chat}
-							<button
-								class="rounded-xl px-2 py-1 text-left"
-								onclick={() => {
-									db.setCurrentChat(chat.id)
-									showSearch = false
-								}}
-							>
-								{chat.title}
-							</button>
-						{/each}
-					{:else}
-						<p class="text-gray-500">No messages found</p>
-					{/if}
-				{:else}
-					{#each db.chats.slice(0, 5) as chat}
-						<button
-							class="rounded-xl px-2 py-1 text-left"
-							onclick={() => {
-								db.setCurrentChat(chat.id)
-								showSearch = false
-							}}
-						>
-							{chat.title}
-						</button>
-					{/each}
-				{/if}
-			</div>
-		</div>
-	</div>
+	<SearchDialog {showSearch} {searchQuery} />
 {/if}
 
 <svelte:window
