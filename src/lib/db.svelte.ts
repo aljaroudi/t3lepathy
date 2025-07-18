@@ -95,7 +95,7 @@ export let state = $state({
 		const shouldAutoRename = this.messages.length === 0
 
 		const titlePromise = shouldAutoRename
-			? generateTitle({ message: firstMessage, model })
+			? generateTitle({ message: firstMessage })
 			: null
 		// 1. Add user message to db
 		await db.put('messages', msg)
@@ -206,3 +206,13 @@ export function persistedState<T extends string>(key: string, initialValue: T) {
 		},
 	}
 }
+
+export const systemPrompt = persistedState<string>(
+	'systemPrompt',
+	'You are a friendly assistant!'
+)
+
+export const titleModel = persistedState<Model['name']>(
+	'titleModel',
+	'gemini-1.5-flash'
+)

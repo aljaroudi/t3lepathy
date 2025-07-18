@@ -7,7 +7,7 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import type { ContextMessage, Model, Provider } from './types'
-import { getApiKeys } from './db.svelte'
+import { getApiKeys, titleModel } from './db.svelte'
 
 function getModel(model: Model) {
 	const apiKey = getApiKeys()[model.provider]
@@ -80,15 +80,9 @@ export async function expectsImage({
 	}).then(result => result.text.includes('true'))
 }
 
-export async function generateTitle({
-	message,
-	model,
-}: {
-	message: string
-	model: Model
-}) {
+export async function generateTitle({ message }: { message: string }) {
 	return generateText({
-		model: getModel(model),
+		model: getModel(MODELS.find(m => m.name === titleModel.value)!),
 		system:
 			"Generate a short, descriptive title (max 5 words) for this conversation based on the user's first message. The title should capture the main topic or purpose of the discussion.",
 		messages: [{ role: 'user', content: message }],
