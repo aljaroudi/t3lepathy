@@ -86,7 +86,7 @@
 		<div class="flex flex-col gap-2">
 			{#each Object.entries(groupedChats) as [date, chats]}
 				<div class="flex flex-col gap-2">
-					<h2 class="text-sm font-thin">{date}</h2>
+					<h2 class="text-xs font-thin">{date}</h2>
 					{#each chats as chat}
 						<button
 							class="flex cursor-pointer rounded-lg p-2 text-left hover:bg-white aria-pressed:bg-white aria-pressed:shadow-xs dark:text-slate-200 dark:aria-pressed:bg-slate-200 dark:aria-pressed:text-slate-800"
