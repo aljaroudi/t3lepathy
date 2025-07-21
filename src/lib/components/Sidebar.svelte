@@ -35,7 +35,7 @@
 >
 	<div class="my-1 flex items-center justify-between gap-2">
 		<button
-			class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
+			class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200 dark:hover:bg-slate-500"
 			style="transform: rotate(180deg)"
 			onclick={onClose}
 		>
@@ -49,7 +49,7 @@
 		</h1>
 
 		<button
-			class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
+			class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200 dark:hover:bg-slate-500"
 			aria-label="Settings"
 			title="Settings"
 			aria-pressed={showDialog}
