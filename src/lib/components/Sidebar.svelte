@@ -1,8 +1,13 @@
 <script lang="ts">
 	import { apiKeys, state as db } from '../db.svelte'
-	import Panel from '../icons/Panel.svelte'
 	import { dateToRelativeTime } from '../date'
-	import { PlusIcon, SearchIcon, Settings, Trash2Icon } from '@lucide/svelte'
+	import {
+		PanelLeftIcon,
+		PlusIcon,
+		SearchIcon,
+		Settings,
+		Trash2Icon,
+	} from '@lucide/svelte'
 	import ActionButton from './ActionButton.svelte'
 
 	let {
@@ -39,7 +44,7 @@
 			style="transform: rotate(180deg)"
 			onclick={onClose}
 		>
-			<Panel />
+			<PanelLeftIcon size="1em" />
 		</button>
 
 		<h1

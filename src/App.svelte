@@ -6,10 +6,15 @@
 	import Panel from './lib/icons/Panel.svelte'
 	import { convertFileToBase64 } from './lib/storage'
 	import Sidebar from './lib/components/Sidebar.svelte'
-	import Arrow from './lib/icons/Arrow.svelte'
 	import * as Select from './lib/components/ui/select/index'
 	import '@fontsource-variable/ibm-plex-sans'
-	import { PaperclipIcon, PlusIcon, SearchIcon } from '@lucide/svelte'
+	import {
+		ArrowUpIcon,
+		PanelLeftIcon,
+		PaperclipIcon,
+		PlusIcon,
+		SearchIcon,
+	} from '@lucide/svelte'
 	import Bubble from './lib/components/Bubble.svelte'
 	import LengthIcon from './lib/components/LengthIcon.svelte'
 	import SettingsDialog from './lib/components/SettingsDialog.svelte'
@@ -108,7 +113,7 @@
 				style="transform: rotate(180deg)"
 				onclick={() => (showSidebar = true)}
 			>
-				<Panel />
+				<PanelLeftIcon size="1em" />
 			</button>
 			<button
 				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
@@ -249,7 +254,7 @@
 					type="submit"
 					disabled={!textInput.value.trim().length}
 				>
-					<Arrow />
+					<ArrowUpIcon size="1em" />
 				</ActionButton>
 			</div>
 		</form>

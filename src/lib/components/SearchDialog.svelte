@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PlusIcon, Search } from '@lucide/svelte'
+	import { PlusIcon, SearchIcon } from '@lucide/svelte'
 	import { state as db } from '../db.svelte'
 	import Dialog from './Dialog.svelte'
 
@@ -12,7 +12,7 @@
 		<p
 			class="flex items-center gap-2 text-lg text-slate-500 dark:text-slate-200"
 		>
-			<Search />
+			<SearchIcon size="1em" />
 			<span class="text-slate-200">/</span>
 			<PlusIcon size="1em" />
 		</p>
