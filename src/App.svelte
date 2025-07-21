@@ -14,6 +14,7 @@
 	import LengthIcon from './lib/components/LengthIcon.svelte'
 	import SettingsDialog from './lib/components/SettingsDialog.svelte'
 	import SearchDialog from './lib/components/SearchDialog.svelte'
+	import ActionButton from './lib/components/ActionButton.svelte'
 
 	void db.init()
 
@@ -241,14 +242,13 @@
 					multiple
 					accept={getFileTypes(currentModel)}
 				/>
-				<button
+				<ActionButton
 					id="submit"
 					type="submit"
-					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-radial-[at_25%_25%] from-cyan-500 to-cyan-700 to-75% text-lg text-white shadow-lg hover:bg-radial-[at_50%_50%] disabled:cursor-not-allowed disabled:opacity-50"
 					disabled={!textInput.value.trim().length}
 				>
 					<Arrow />
-				</button>
+				</ActionButton>
 			</div>
 		</form>
 	</section>

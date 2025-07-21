@@ -3,6 +3,7 @@
 	import Panel from '../icons/Panel.svelte'
 	import { dateToRelativeTime } from '../date'
 	import { PlusIcon, SearchIcon, Settings, Trash2Icon } from '@lucide/svelte'
+	import ActionButton from './ActionButton.svelte'
 
 	let {
 		onClose,
@@ -72,12 +73,9 @@
 			class="w-full border-none bg-transparent p-0 outline-none focus:ring-0"
 			bind:value={searchQuery}
 		/>
-		<button
-			class="flex cursor-pointer items-center justify-center rounded-full bg-radial-[at_25%_25%] from-cyan-500 to-cyan-700 to-75% p-2 text-lg text-white shadow hover:bg-radial-[at_50%_50%]"
-			onclick={onCreateChat}
-		>
+		<ActionButton id="submit" type="submit" onclick={onCreateChat}>
 			<PlusIcon size="1em" />
-		</button>
+		</ActionButton>
 	</div>
 	<div
 		class="flex flex-col gap-2 overflow-y-auto scroll-smooth"
