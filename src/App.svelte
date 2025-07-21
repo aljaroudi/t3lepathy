@@ -67,6 +67,16 @@
 	function jumpToTextInput() {
 		document.getElementById('message')?.focus()
 	}
+
+	function getRandomPlaceholder() {
+		const PLACEHOLDERS = [
+			"What's on your mind?",
+			'What do you want to know?',
+			'How may I help you?',
+			'What can I do for you?',
+		]
+		return PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]
+	}
 </script>
 
 <main
@@ -141,7 +151,7 @@
 				id="message"
 				name="message"
 				class="resize-none border-none bg-transparent p-2 outline-none focus:ring-0 dark:text-slate-200"
-				placeholder="Type your message..."
+				placeholder={getRandomPlaceholder()}
 				minLength={1}
 				required
 				autocomplete="off"
