@@ -2,10 +2,9 @@
 	import { PlusIcon, Search } from '@lucide/svelte'
 	import { state as db } from '../db.svelte'
 
-	let {
-		showSearch = $bindable(false),
-		searchQuery = $bindable(''),
-	}: { showSearch: boolean; searchQuery: string } = $props()
+	let { showSearch = $bindable(false) }: { showSearch: boolean } = $props()
+
+	let searchQuery = $state('')
 </script>
 
 <div
