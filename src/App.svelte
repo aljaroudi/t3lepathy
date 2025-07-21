@@ -1,7 +1,7 @@
 <script lang="ts">
 	import 'highlight.js/styles/atom-one-dark.min.css'
 	import { getFileTypes, MODELS, PROVIDERS } from './lib/ai'
-	import { state as db, persistedState } from './lib/db.svelte'
+	import { apiKeys, state as db, persistedState } from './lib/db.svelte'
 	import type { Model, ResponseLength } from './lib/types'
 	import Panel from './lib/icons/Panel.svelte'
 	import { convertFileToBase64 } from './lib/storage'
@@ -40,7 +40,7 @@
 	async function sendMessage(message: string, files: File[]) {
 		const chatId = db.currentChatId || (await db.addChat('New chat'))
 
-		const apiKey = db.apiKeys[currentModel.provider]
+		const apiKey = apiKeys.value[currentModel.provider]
 		if (!apiKey) return alert('No API key found for this model')
 		// User
 		const msgId = crypto.randomUUID()
@@ -170,7 +170,7 @@
 					</Select.Trigger>
 					<Select.Content>
 						{#each PROVIDERS as provider}
-							{@const keyIsSet = db.apiKeys[provider]?.length}
+							{@const keyIsSet = apiKeys.value[provider]?.length}
 							<Select.Group>
 								<Select.Label class="text-base">{provider}</Select.Label>
 								{#each MODELS.filter(model => model.provider === provider) as model}
@@ -254,7 +254,7 @@
 	</section>
 </main>
 
-{#if showDialog}
+{#if showDialog || apiKeys.isEmpty}
 	<SettingsDialog {showDialog} />
 {:else if showSearch}
 	<SearchDialog {showSearch} {searchQuery} />

@@ -19,17 +19,12 @@ const dbPromise = openDB<ChatDB>('chat-db', 1, {
 	},
 })
 
+export const apiKeys = apiKeyState()
+
 export let state = $state({
 	chats: [] as Chat[],
 	messages: [] as Message[],
 	currentChatId: null as string | null,
-
-	get apiKeys(): Record<Provider, string> {
-		return getApiKeys()
-	},
-	set apiKeys(value: Record<Provider, string>) {
-		localStorage.setItem('apiKeys', JSON.stringify(value))
-	},
 
 	async init() {
 		const db = await dbPromise
@@ -38,7 +33,7 @@ export let state = $state({
 		this.chats = chats.sort((a, b) => b.date.getTime() - a.date.getTime())
 		// get keys
 		const keys = await db.getAll('apiKeys')
-		this.apiKeys = keys.reduce(
+		apiKeys.value = keys.reduce(
 			(acc, key) => {
 				acc[key.provider] = key.value
 				return acc
@@ -205,6 +200,23 @@ export function persistedState<T extends string>(key: string, initialValue: T) {
 		set value(newValue: T) {
 			value = newValue
 			localStorage.setItem(key, newValue)
+		},
+	}
+}
+
+function apiKeyState() {
+	let value = $state<Record<Provider, string>>(getApiKeys())
+	return {
+		get value() {
+			return value
+		},
+		set value(newValue: Record<Provider, string>) {
+			value = newValue
+			localStorage.setItem('apiKeys', JSON.stringify(newValue))
+		},
+		/** true if no API keys are set */
+		get isEmpty() {
+			return Object.values(value).every(v => v.trim() === '')
 		},
 	}
 }

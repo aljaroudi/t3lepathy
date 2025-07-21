@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { state as db } from '../db.svelte'
+	import { apiKeys, state as db } from '../db.svelte'
 	import Panel from '../icons/Panel.svelte'
 	import { dateToRelativeTime } from '../date'
 	import { PlusIcon, SearchIcon, Settings, Trash2Icon } from '@lucide/svelte'
@@ -54,7 +54,7 @@
 			title="Settings"
 			aria-pressed={showDialog}
 			style="border-radius: 50%"
-			aria-busy={Object.keys(db.apiKeys).length === 0}
+			aria-busy={apiKeys.isEmpty}
 			onclick={onShowDialog}
 		>
 			<Settings size="1em" class="hover:animate-spin" />

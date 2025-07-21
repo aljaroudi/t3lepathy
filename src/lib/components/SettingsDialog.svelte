@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { AlertTriangleIcon } from '@lucide/svelte'
 	import { MODELS, PROVIDERS } from '../ai'
-	import { state as db, systemPrompt, titleModel } from '../db.svelte'
+	import { apiKeys, systemPrompt, titleModel } from '../db.svelte'
 	import { isValidApiKey } from '../validate'
 	import * as Select from './ui/select/index'
 
@@ -11,7 +12,8 @@
 	class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs"
 >
 	<div
-		class="relative flex min-w-[300px] flex-col gap-2 rounded-xl bg-white/80 p-6 shadow-lg dark:bg-slate-800/80 dark:text-slate-200"
+		class="relative flex flex-col gap-2 rounded-xl bg-white/80 p-6 shadow-lg dark:bg-slate-800/80 dark:text-slate-200"
+		style="width: 100%; min-width: 300px; max-width: 400px"
 	>
 		<button
 			class="absolute top-2 right-2 text-gray-500 hover:text-black"
@@ -20,6 +22,16 @@
 			&times;
 		</button>
 		<h2 class="mb-2 text-xl font-bold">Settings</h2>
+
+		<!-- show warning message if no api keys -->
+		{#if apiKeys.isEmpty}
+			<p
+				class="flex items-center gap-1 rounded-lg bg-amber-50 p-2 text-sm text-amber-600"
+			>
+				<AlertTriangleIcon size="1em" />
+				Please add API keys to continue
+			</p>
+		{/if}
 
 		<!-- providers -->
 		<div class="flex flex-col gap-2">
@@ -33,10 +45,10 @@
 						id={`apiKey-${provider}`}
 						placeholder={`${provider} API key`}
 						class="col-span-3 rounded-lg border-none p-2 aria-disabled:bg-rose-200 dark:bg-slate-100 dark:text-slate-800"
-						aria-disabled={!isValidApiKey(provider, db.apiKeys[provider])}
-						value={db.apiKeys[provider] || ''}
+						aria-disabled={!isValidApiKey(provider, apiKeys.value[provider])}
+						value={apiKeys.value[provider] || ''}
 						oninput={({ currentTarget: { value } }) => {
-							db.apiKeys = { ...db.apiKeys, [provider]: value }
+							apiKeys.value = { ...apiKeys.value, [provider]: value.trim() }
 						}}
 					/>
 				</div>
