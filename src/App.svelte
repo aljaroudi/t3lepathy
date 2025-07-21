@@ -209,7 +209,7 @@
 						<Select.Item value="open">
 							<div class="flex flex-col gap-2">
 								<span>Open</span>
-								<span class="text-xs text-gray-500">No limit</span>
+								<span class="text-xs text-gray-500">Unlimited response</span>
 							</div>
 						</Select.Item>
 					</Select.Content>
