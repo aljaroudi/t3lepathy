@@ -8,12 +8,16 @@
 	let { onClose }: { onClose: () => void } = $props()
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
 	class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs"
+	onclick={onClose}
 >
 	<div
 		class="relative flex flex-col gap-2 rounded-xl bg-white/80 p-6 shadow-lg dark:bg-slate-800/80 dark:text-slate-200"
 		style="width: 100%; min-width: 300px; max-width: 400px"
+		onclick={e => e.stopPropagation()}
 	>
 		<button
 			class="absolute top-2 right-2 cursor-pointer rounded bg-slate-100 px-2 py-1 text-xs text-slate-400 select-none dark:bg-slate-500 dark:text-slate-200"

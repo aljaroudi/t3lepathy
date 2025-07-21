@@ -6,11 +6,15 @@
 	let searchQuery = $state('')
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
 	class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs"
+	onclick={onClose}
 >
 	<div
 		class="relative min-w-[60ch] rounded-xl bg-white/80 shadow-lg dark:bg-slate-800/80 dark:text-slate-200"
+		onclick={e => e.stopPropagation()}
 	>
 		<div class="mx-2 flex items-center gap-2 border-b border-slate-200">
 			<p
