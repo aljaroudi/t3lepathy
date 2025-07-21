@@ -61,7 +61,10 @@
 				responseLength.value,
 				grounding
 			)
-			.catch(() => alert('Error sending message'))
+			.catch(e => {
+				console.error(e)
+				alert(`Error sending message: ${e.message}`)
+			})
 			.finally(() => (loading = null))
 	}
 
@@ -257,7 +260,7 @@
 {#if showDialog || apiKeys.isEmpty}
 	<SettingsDialog {showDialog} />
 {:else if showSearch}
-	<SearchDialog {showSearch} {searchQuery} />
+	<SearchDialog {showSearch} />
 {/if}
 
 <svelte:window
