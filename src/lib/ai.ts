@@ -7,15 +7,17 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import type { ContextMessage, Model, Provider } from './types'
-import { getApiKeys } from './db.svelte'
+import { getApiKeys, titleModel } from './db.svelte'
 
-function getModel(model: Model) {
+function getModel(model: Model, useSearchGrounding: boolean) {
 	const apiKey = getApiKeys()[model.provider]
 	switch (model.provider) {
 		case 'OpenAI':
 			return createOpenAI({ apiKey })(model.name)
 		case 'Google':
-			return createGoogleGenerativeAI({ apiKey })(model.name)
+			return createGoogleGenerativeAI({ apiKey })(model.name, {
+				useSearchGrounding,
+			})
 		case 'Anthropic':
 			return createAnthropic({ apiKey })(model.name)
 	}
@@ -46,14 +48,16 @@ export function generateResponse({
 	messages,
 	model,
 	maxWords,
+	grounding,
 }: {
 	messages: ContextMessage[]
 	model: Model
 	maxWords: number | null
+	grounding: boolean
 }) {
 	const systemPrompt = 'You are a friendly assistant!'
 	const result = streamText({
-		model: getModel(model),
+		model: getModel(model, grounding),
 		system: maxWords
 			? systemPrompt + ` You will respond in ${maxWords} sentences.`
 			: systemPrompt,
@@ -71,27 +75,22 @@ export async function expectsImage({
 	message: ContextMessage
 	model: Model
 }): Promise<boolean> {
+	if (!model.capabilities.has('image-output')) return false
 	return generateText({
-		model: getModel(model),
+		model: getModel(model, false),
 		system:
 			"You are a helpful assistant that can determine if a message expects an image. If it does, return 'true'. If it doesn't, return 'false'. If you are not sure, return 'false'.",
 		messages: [{ role: 'user', content: message.content }],
 	}).then(result => result.text.includes('true'))
 }
 
-export function generateTitle({
-	message,
-	model,
-}: {
-	message: string
-	model: Model
-}) {
-	return streamText({
-		model: getModel(model),
+export async function generateTitle({ message }: { message: string }) {
+	return generateText({
+		model: getModel(MODELS.find(m => m.name === titleModel.value)!, false),
 		system:
 			"Generate a short, descriptive title (max 5 words) for this conversation based on the user's first message. The title should capture the main topic or purpose of the discussion.",
 		messages: [{ role: 'user', content: message }],
-	}).textStream
+	}).then(result => result.text)
 }
 
 export const MODELS = [
@@ -99,31 +98,50 @@ export const MODELS = [
 		provider: 'OpenAI',
 		title: 'GPT-4o Mini',
 		name: 'gpt-4o-mini',
-		description: 'Smallest, fast, cost-efficient',
+		description: 'Fast, cheap',
+		capabilities: new Set(['text-output', 'file-input']),
 	},
 	{
 		provider: 'OpenAI',
 		title: 'GPT-4o',
 		name: 'gpt-4o',
-		description: 'Balanced performance and cost',
+		description: 'Text + image input',
+		capabilities: new Set(['text-output', 'file-input', 'image-input']),
+	},
+	{
+		provider: 'OpenAI',
+		title: 'DALL·E 3',
+		name: 'dall-e-3',
+		description: 'Image generation only',
+		capabilities: new Set(['image-output']),
 	},
 	{
 		provider: 'Google',
-		title: 'Gemini 1.5 Flash',
-		name: 'gemini-1.5-flash',
-		description: 'Fastest, cost-efficient Gemini',
+		title: 'Gemini 2.0 Flash Lite',
+		name: 'gemini-2.0-flash-lite',
+		description: 'Fastest, cheapest',
+		capabilities: new Set(['text-output', 'file-input']),
 	},
 	{
 		provider: 'Google',
-		title: 'Gemini 1.5 Pro',
-		name: 'gemini-1.5-pro',
-		description: 'Balanced Gemini performance/cost',
+		title: 'Gemini 2.5 Flash',
+		name: 'gemini-2.5-flash',
+		description: 'Fast, cheap',
+		capabilities: new Set(['text-output', 'file-input']),
+	},
+	{
+		provider: 'Google',
+		title: 'Gemini 2.5 Pro',
+		name: 'gemini-2.5-pro',
+		description: 'Advanced',
+		capabilities: new Set(['text-output', 'file-input']),
 	},
 	{
 		provider: 'Anthropic',
 		title: 'Claude 3.5 Sonnet',
 		name: 'claude-3-5-sonnet-20240620',
-		description: 'Balanced Claude performance/cost',
+		description: 'Smart, balanced Claude',
+		capabilities: new Set(['text-output', 'file-input']),
 	},
 ] satisfies Model[]
 
@@ -131,4 +149,16 @@ export const PROVIDERS = ['Google', 'OpenAI', 'Anthropic'] satisfies Provider[]
 
 function getSeed() {
 	return Math.floor(Math.random() * 1_000_000)
+}
+
+export function getFileTypes(model: Model) {
+	let types = ''
+	if (model.capabilities.has('file-input')) {
+		types +=
+			'.pdf,.doc,.docx,.txt,.md,.rtf,.csv,.xls,.xlsx,.ppt,.pptx,.json,.xml,.html,.js,.ts,.jsx,.tsx,.py,.java,.c,.cpp,.cs,.go,.rb,.php,.sh,.swift,.rs,.kt,.m,.h,.sql,.yml,.yaml,.toml,.ini,.bat,.pl,.lua,.r,.ipynb,.tex,.scss,.sass,.less,.css,'
+	}
+	if (model.capabilities.has('image-input')) {
+		types += 'image/*,'
+	}
+	return types.slice(0, -1)
 }

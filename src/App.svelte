@@ -1,45 +1,54 @@
 <script lang="ts">
-	import { Marked } from 'marked'
-	import { markedHighlight } from 'marked-highlight'
-	import hljs from 'highlight.js'
 	import 'highlight.js/styles/atom-one-dark.min.css'
-	import { MODELS, PROVIDERS } from './lib/ai'
-	import { state as db } from './lib/db.svelte'
-	import type { Model } from './lib/types'
+	import { getFileTypes, MODELS, PROVIDERS } from './lib/ai'
+	import { apiKeys, state as db, persistedState } from './lib/db.svelte'
+	import type { Model, ResponseLength } from './lib/types'
 	import Panel from './lib/icons/Panel.svelte'
-	import Search from './lib/icons/Search.svelte'
 	import { convertFileToBase64 } from './lib/storage'
-	import Sidebar from './lib/ui/Sidebar.svelte'
-	import Plus from './lib/icons/Plus.svelte'
+	import Sidebar from './lib/components/Sidebar.svelte'
 	import Arrow from './lib/icons/Arrow.svelte'
-	import { isValidApiKey } from './lib/validate'
 	import * as Select from './lib/components/ui/select/index'
 	import '@fontsource-variable/ibm-plex-sans'
-	import { LoaderCircle } from '@lucide/svelte'
+	import { PaperclipIcon, PlusIcon, SearchIcon } from '@lucide/svelte'
+	import Bubble from './lib/components/Bubble.svelte'
+	import LengthIcon from './lib/components/LengthIcon.svelte'
+	import SettingsDialog from './lib/components/SettingsDialog.svelte'
+	import SearchDialog from './lib/components/SearchDialog.svelte'
+	import ActionButton from './lib/components/ActionButton.svelte'
 
 	void db.init()
 
-	let currentModel = $state<Model['name']>('gemini-1.5-flash')
 	let showDialog = $state(false)
 	let showSidebar = $state(true)
 	let showSearch = $state(false)
 	let searchQuery = $state('')
-	let loading = $state(false)
+	let grounding = $state(false)
+	let loading = $state<string | null>(null)
+	let responseLength = persistedState<ResponseLength>(
+		'responseLength',
+		'medium'
+	)
+	let currentModelId = persistedState<Model['name']>(
+		'currentModel',
+		'gemini-2.0-flash-lite'
+	)
+	let textInput = persistedState<string>('textInput', '')
+	const currentModel = $derived(
+		MODELS.find(m => m.name === currentModelId.value)!
+	)
 
 	async function sendMessage(message: string, files: File[]) {
 		const chatId = db.currentChatId || (await db.addChat('New chat'))
 
-		const model = MODELS.find(m => m.name === currentModel)
-		if (!model) return alert('Invalid model')
-		const apiKey = db.apiKeys[model.provider]
+		const apiKey = apiKeys.value[currentModel.provider]
 		if (!apiKey) return alert('No API key found for this model')
 		// User
-
-		loading = true
+		const msgId = crypto.randomUUID()
+		loading = msgId
 		await db
 			.addMessage(
 				{
-					id: crypto.randomUUID(),
+					id: msgId,
 					chatId,
 					content: [
 						{ type: 'text' as const, text: message },
@@ -48,32 +57,41 @@
 					role: 'user',
 					date: new Date(),
 				},
-				model,
-				db.responseLength
+				currentModel,
+				responseLength.value,
+				grounding
 			)
-			.finally(() => (loading = false))
+			.catch(() => alert('Error sending message'))
+			.finally(() => (loading = null))
 	}
 
-	const marked = new Marked(
-		markedHighlight({
-			emptyLangClass: 'hljs',
-			langPrefix: 'hljs language-',
-			highlight(code, lang) {
-				const language = hljs.getLanguage(lang) ? lang : 'plaintext'
-				return hljs.highlight(code, { language }).value
-			},
-		})
-	).setOptions({ pedantic: false, gfm: true, breaks: false })
+	function jumpToTextInput() {
+		document.getElementById('message')?.focus()
+	}
+
+	function getRandomPlaceholder() {
+		const PLACEHOLDERS = [
+			"What's on your mind?",
+			'What do you want to know?',
+			'How may I help you?',
+			'What can I do for you?',
+		]
+		return PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]
+	}
 </script>
 
 <main
 	class="grid h-dvh w-full transition-all duration-300 ease-in-out dark:bg-slate-800 dark:text-slate-100"
-	style="grid-template-columns: {showSidebar ? '240px' : '0px'} 1fr"
+	data-sidebar={showSidebar}
+	style="grid-template-columns: var(--sidebar-width) 1fr"
 >
 	{#if showSidebar}
 		<Sidebar
 			onClose={() => (showSidebar = false)}
-			onCreateChat={() => db.addChat('New chat')}
+			onCreateChat={() => {
+				if (db.messages.length) db.addChat('New chat')
+				jumpToTextInput()
+			}}
 			onSelectChat={chatId => db.setCurrentChat(chatId)}
 			{showDialog}
 			onShowDialog={() => (showDialog = true)}
@@ -84,88 +102,38 @@
 			style="z-index: 10"
 		>
 			<button
-				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
+				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
 				style="transform: rotate(180deg)"
 				onclick={() => (showSidebar = true)}
 			>
 				<Panel />
 			</button>
 			<button
-				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
+				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
 				onclick={() => db.addChat('New chat')}
 			>
-				<Plus />
+				<PlusIcon size="1em" />
 			</button>
 		</div>
 	{/if}
-	<section
-		class="relative mx-auto flex h-dvh w-full flex-col gap-2 px-4"
-		style="max-width: 80ch"
-	>
+	<section class="relative flex h-dvh w-full flex-col gap-2 px-4">
 		<div
-			class="flex flex-1 flex-col gap-2 overflow-y-auto"
+			class="overflow-y-auto"
 			style="scroll-padding-bottom: 120px; padding-bottom: calc(120px + 1rem);"
 		>
-			{#each db.messages as message}
-				{#if message.role === 'user'}
-					<div
-						class="my-2 ml-auto rounded-2xl rounded-br-none bg-zinc-100 px-4 py-2 text-slate-800 shadow-xs"
-						style="max-width: 60ch"
-					>
-						{#each message.content.filter(part => part.type === 'text') as part}
-							{@html marked.parse(part.text)}
-						{/each}
-						{#if message.content.some(part => part.type !== 'text')}
-							{@const images = message.content.filter(
-								part => part.type === 'image'
-							)}
-							{@const files = message.content.filter(
-								part => part.type === 'file'
-							)}
-							<div class="flex gap-2">
-								{#each images as image}
-									<img
-										src={image.image}
-										alt="Message attachment"
-										class="size-20 rounded-lg object-cover"
-									/>
-								{/each}
-								{#each files as file}
-									<p
-										class="rounded-full bg-cyan-700 px-3 py-1 text-sm text-white"
-									>
-										{file.filename || `${file.mimeType} file`}
-									</p>
-								{/each}
-							</div>
-						{/if}
-					</div>
-				{:else}
-					<p style="max-width: 80ch">
-						{#each message.content as part}
-							{#if part.type === 'text'}
-								{@html marked.parse(part.text)}
-							{:else if part.type === 'image'}
-								<img
-									src={part.image}
-									alt="Message attachment"
-									class="rounded-lg object-cover"
-								/>
-							{/if}
-						{/each}
-					</p>
-				{/if}
-			{/each}
-			{#if loading}
-				<div class="flex animate-spin items-center justify-center">
-					<LoaderCircle />
-				</div>
-			{/if}
+			<div
+				class="mx-auto flex w-full flex-1 flex-col gap-4"
+				style="width: var(--content-width)"
+			>
+				{#each db.messages as message}
+					<Bubble {message} loading={loading === message.id} />
+				{/each}
+			</div>
 		</div>
 		<!-- Floating input form -->
 		<form
-			class="absolute right-2 bottom-2 left-2 z-20 mx-auto flex w-full max-w-[60ch] flex-col gap-2 rounded-xl border border-slate-200 bg-white/80 p-2 shadow-xs backdrop-blur dark:border-slate-200/20 dark:bg-slate-800/80"
-			style="height: 120px; max-width: calc(100% - 1rem)"
+			class="absolute right-2 bottom-0 left-2 z-20 mx-auto flex w-full flex-col gap-2 rounded-t-xl border border-b-0 border-slate-200 bg-white/80 p-2 shadow-xs backdrop-blur-xs dark:border-slate-200/20 dark:bg-slate-800/80"
+			style="height: 120px; width: calc(var(--content-width) + 1rem)"
 			onsubmit={e => {
 				e.preventDefault()
 				const formData = new FormData(e.currentTarget)
@@ -175,28 +143,34 @@
 					.filter(f => f instanceof File && f.name !== '') as File[]
 				if (!message.trim()) return
 				sendMessage(message.trim(), files)
-				const messageInput = e.currentTarget.querySelector('input')
-				if (messageInput) messageInput.value = ''
+				textInput.value = ''
+				const fileInput = document.getElementById('file') as HTMLInputElement
+				fileInput.value = ''
 			}}
 		>
-			<input
+			<textarea
+				id="message"
 				name="message"
-				type="text"
-				class="border-none bg-transparent p-2 outline-none focus:ring-0 dark:text-slate-200"
-				placeholder="Type your message..."
+				class="resize-none border-none bg-transparent p-2 outline-none focus:ring-0 dark:text-slate-200"
+				placeholder={getRandomPlaceholder()}
 				minLength={1}
 				required
 				autocomplete="off"
 				spellcheck="false"
-			/>
+				bind:value={textInput.value}
+				oninput={({ currentTarget: { value } }) =>
+					(textInput.value = value.trimStart())}
+			></textarea>
 			<div class="flex gap-2 px-2 py-1">
-				<Select.Root type="single" required bind:value={currentModel}>
-					<Select.Trigger class="w-[180px]">
-						{MODELS.filter(m => m.name === currentModel)[0].title}
+				<Select.Root type="single" required bind:value={currentModelId.value}>
+					<Select.Trigger
+						class="cursor-pointer border-none shadow-none hover:bg-cyan-100 dark:bg-transparent dark:hover:bg-cyan-900"
+					>
+						{currentModel.title}
 					</Select.Trigger>
 					<Select.Content>
 						{#each PROVIDERS as provider}
-							{@const keyIsSet = db.apiKeys[provider]?.length}
+							{@const keyIsSet = apiKeys.value[provider]?.length}
 							<Select.Group>
 								<Select.Label class="text-base">{provider}</Select.Label>
 								{#each MODELS.filter(model => model.provider === provider) as model}
@@ -214,9 +188,11 @@
 					</Select.Content>
 				</Select.Root>
 
-				<Select.Root type="single" bind:value={db.responseLength}>
-					<Select.Trigger class="w-[100px] capitalize">
-						{db.responseLength}
+				<Select.Root type="single" bind:value={responseLength.value}>
+					<Select.Trigger
+						class="cursor-pointer border-none capitalize shadow-none hover:bg-cyan-100 dark:bg-transparent dark:hover:bg-cyan-900"
+					>
+						<LengthIcon length={responseLength.value} />
 					</Select.Trigger>
 					<Select.Content>
 						<Select.Item value="short">
@@ -234,7 +210,7 @@
 						<Select.Item value="open">
 							<div class="flex flex-col gap-2">
 								<span>Open</span>
-								<span class="text-xs text-gray-500">No limit</span>
+								<span class="text-xs text-gray-500">Unlimited response</span>
 							</div>
 						</Select.Item>
 					</Select.Content>
@@ -242,131 +218,54 @@
 
 				<button
 					type="button"
-					class="rounded-full p-2 hover:bg-gray-200 dark:border-slate-200 dark:bg-slate-200 dark:hover:bg-slate-200"
+					class="size-9 cursor-pointer rounded-lg hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-cyan-100 dark:hover:bg-cyan-900 dark:hover:text-white dark:aria-pressed:bg-cyan-900"
 					onclick={() => document.getElementById('file')?.click()}
+					disabled={getFileTypes(currentModel).length === 0}
+					title="Attach files"
 				>
-					📎
+					<PaperclipIcon size={16} class="mx-auto" />
 				</button>
-				<input type="file" name="file" id="file" class="hidden" multiple />
 				<button
+					type="button"
+					class="size-9 cursor-pointer rounded-lg hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-cyan-100 dark:hover:bg-cyan-900 dark:hover:text-white dark:aria-pressed:bg-cyan-900"
+					onclick={() => (grounding = !grounding)}
+					aria-pressed={grounding}
+					title="Toggle search grounding"
+				>
+					<SearchIcon size={16} class="mx-auto" />
+				</button>
+				<input
+					type="file"
+					name="file"
+					id="file"
+					class="hidden"
+					multiple
+					accept={getFileTypes(currentModel)}
+				/>
+				<ActionButton
+					id="submit"
 					type="submit"
-					class="ml-auto flex size-10 cursor-pointer items-center justify-center rounded-full bg-cyan-700 text-lg text-white"
+					disabled={!textInput.value.trim().length}
 				>
 					<Arrow />
-				</button>
+				</ActionButton>
 			</div>
 		</form>
 	</section>
 </main>
 
-{#if showDialog}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs"
-	>
-		<div class="relative min-w-[300px] rounded-xl bg-white p-6 shadow-lg">
-			<button
-				class="absolute top-2 right-2 text-gray-500 hover:text-black"
-				onclick={() => (showDialog = false)}
-				>&times;
-			</button>
-			<h2 class="mb-2 text-xl font-bold">Settings</h2>
-
-			<!-- providers -->
-			<div class="flex flex-col gap-2">
-				<span class="text-sm text-gray-500">API keys</span>
-				{#each PROVIDERS as provider}
-					<div class="grid grid-cols-4 items-center gap-2">
-						<label for={`apiKey-${provider}`}>{provider}</label>
-						<input
-							type="text"
-							name={`apiKey-${provider}`}
-							id={`apiKey-${provider}`}
-							placeholder={`${provider} API key`}
-							class="col-span-3 rounded-lg border border-gray-200 bg-white p-2 aria-disabled:border-rose-500 dark:bg-slate-100 dark:text-slate-800"
-							aria-disabled={!isValidApiKey(provider, db.apiKeys[provider])}
-							value={db.apiKeys[provider] || ''}
-							oninput={({ currentTarget: { value } }) => {
-								db.apiKeys = { ...db.apiKeys, [provider]: value }
-							}}
-						/>
-					</div>
-				{/each}
-			</div>
-		</div>
-	</div>
+{#if showDialog || apiKeys.isEmpty}
+	<SettingsDialog {showDialog} />
 {:else if showSearch}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs"
-	>
-		<div class="relative min-w-[60ch] rounded-xl bg-white shadow-lg">
-			<div class="mx-2 flex items-center gap-2 border-b border-gray-200">
-				<p class="flex items-center gap-2 text-lg text-gray-500">
-					<Search />
-					<span class="text-gray-200">/</span>
-					<Plus />
-				</p>
-				<button
-					class="absolute top-2 right-2 text-gray-500 hover:text-black"
-					style="transform: rotate(45deg)"
-					onclick={() => (showSearch = false)}
-				>
-					<Plus />
-				</button>
-				<!-- svelte-ignore a11y_autofocus -->
-				<input
-					type="text"
-					name="search"
-					id="search"
-					placeholder="Search..."
-					class="w-full border-none p-2 outline-none focus:ring-0"
-					bind:value={searchQuery}
-					autofocus
-				/>
-			</div>
-			<div class="flex flex-col gap-2">
-				{#if searchQuery.length}
-					{@const filteredMessages = db.chats
-						.filter(chat =>
-							chat.title.toLowerCase().includes(searchQuery.toLowerCase())
-						)
-						.slice(0, 5)}
-					{#if filteredMessages.length}
-						{#each filteredMessages as chat}
-							<button
-								class="rounded-xl px-2 py-1 text-left"
-								onclick={() => {
-									db.setCurrentChat(chat.id)
-									showSearch = false
-								}}
-							>
-								{chat.title}
-							</button>
-						{/each}
-					{:else}
-						<p class="text-gray-500">No messages found</p>
-					{/if}
-				{:else}
-					{#each db.chats.slice(0, 5) as chat}
-						<button
-							class="rounded-xl px-2 py-1 text-left"
-							onclick={() => {
-								db.setCurrentChat(chat.id)
-								showSearch = false
-							}}
-						>
-							{chat.title}
-						</button>
-					{/each}
-				{/if}
-			</div>
-		</div>
-	</div>
+	<SearchDialog {showSearch} {searchQuery} />
 {/if}
 
 <svelte:window
 	onkeydown={e => {
 		if (e.key === 'Escape') {
 			showDialog = showSearch = false
+		} else if (e.key === 'Enter' && e.metaKey) {
+			document.getElementById('submit')?.click()
 		} else if (e.key === 'b' && e.metaKey) {
 			showSidebar = !showSidebar
 		} else if (e.key === 'k' && e.metaKey) {
@@ -376,13 +275,3 @@
 		}
 	}}
 />
-
-<style>
-	:global(body) {
-		font-family: 'IBM Plex Sans', sans-serif;
-	}
-	[aria-invalid='true'] {
-		border-color: red;
-		background-color: red;
-	}
-</style>
