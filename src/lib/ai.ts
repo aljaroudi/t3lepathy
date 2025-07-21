@@ -138,8 +138,8 @@ export const MODELS = [
 	},
 	{
 		provider: 'Anthropic',
-		title: 'Claude 3.5 Sonnet',
-		name: 'claude-3-5-sonnet-20240620',
+		title: 'Claude 4 Sonnet',
+		name: 'claude-4-sonnet-20250514',
 		description: 'Smart, balanced Claude',
 		capabilities: new Set(['text-output', 'file-input']),
 	},
