@@ -35,7 +35,7 @@
 >
 	<div class="my-1 flex items-center justify-between gap-2">
 		<button
-			class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-gray-200"
+			class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
 			style="transform: rotate(180deg)"
 			onclick={onClose}
 		>
@@ -43,13 +43,13 @@
 		</button>
 
 		<h1
-			class="w-full text-center text-xl font-thin tracking-widest text-shadow-lg"
+			class="flex-1 text-center text-xl font-thin tracking-widest text-shadow-lg"
 		>
 			T3lepathy
 		</h1>
 
 		<button
-			class="mt-auto size-10 cursor-pointer"
+			class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
 			aria-label="Settings"
 			title="Settings"
 			aria-pressed={showDialog}
@@ -62,7 +62,7 @@
 	</div>
 	<!-- search box -->
 	<div
-		class="flex w-full items-center gap-1 border-b border-slate-200 pb-2 text-sm"
+		class="flex w-full items-center gap-1 border-b border-slate-500/50 pb-2 text-sm"
 	>
 		<span class="p-2">
 			<SearchIcon size="1.2em" class="text-slate-400" />
@@ -73,7 +73,7 @@
 			class="w-full border-none bg-transparent p-0 outline-none focus:ring-0"
 			bind:value={searchQuery}
 		/>
-		<ActionButton id="submit" type="submit" onclick={onCreateChat}>
+		<ActionButton onclick={onCreateChat}>
 			<PlusIcon size="1em" />
 		</ActionButton>
 	</div>
