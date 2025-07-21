@@ -2,39 +2,41 @@
 	import { PlusIcon, Search } from '@lucide/svelte'
 	import { state as db } from '../db.svelte'
 
-	let { showSearch = $bindable(false) }: { showSearch: boolean } = $props()
-
+	let { onClose }: { onClose: () => void } = $props()
 	let searchQuery = $state('')
 </script>
 
 <div
 	class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xs"
 >
-	<div class="relative min-w-[60ch] rounded-xl bg-white shadow-lg">
-		<div class="mx-2 flex items-center gap-2 border-b border-gray-200">
-			<p class="flex items-center gap-2 text-lg text-gray-500">
+	<div
+		class="relative min-w-[60ch] rounded-xl bg-white/80 shadow-lg dark:bg-slate-800/80 dark:text-slate-200"
+	>
+		<div class="mx-2 flex items-center gap-2 border-b border-slate-200">
+			<p
+				class="flex items-center gap-2 text-lg text-slate-500 dark:text-slate-200"
+			>
 				<Search />
-				<span class="text-gray-200">/</span>
+				<span class="text-slate-200">/</span>
 				<PlusIcon size="1em" />
 			</p>
-			<button
-				class="absolute top-2 right-2 text-gray-500 hover:text-black"
-				style="transform: rotate(45deg)"
-				onclick={() => (showSearch = false)}
-			>
-				<PlusIcon size="1em" />
-			</button>
 			<!-- svelte-ignore a11y_autofocus -->
 			<input
 				type="text"
 				name="search"
 				id="search"
 				placeholder="Search..."
-				class="w-full border-none p-2 outline-none focus:ring-0"
+				class="w-full border-none bg-transparent p-2 outline-none focus:ring-0"
 				bind:value={searchQuery}
 				autofocus
 				autocomplete="off"
 			/>
+			<button
+				class="ml-auto cursor-pointer rounded bg-slate-100 px-2 py-1 text-xs text-slate-400 select-none dark:bg-slate-500 dark:text-slate-200"
+				onclick={onClose}
+			>
+				ESC
+			</button>
 		</div>
 		<div class="flex flex-col gap-2">
 			{#if searchQuery.length}
@@ -49,7 +51,7 @@
 							class="rounded-xl px-2 py-1 text-left"
 							onclick={() => {
 								db.setCurrentChat(chat.id)
-								showSearch = false
+								onClose()
 							}}
 						>
 							{chat.title}
@@ -64,7 +66,7 @@
 						class="rounded-xl px-2 py-1 text-left"
 						onclick={() => {
 							db.setCurrentChat(chat.id)
-							showSearch = false
+							onClose()
 						}}
 					>
 						{chat.title}

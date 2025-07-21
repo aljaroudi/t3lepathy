@@ -5,7 +5,7 @@
 	import { isValidApiKey } from '../validate'
 	import * as Select from './ui/select/index'
 
-	let { showDialog = $bindable(false) }: { showDialog: boolean } = $props()
+	let { onClose }: { onClose: () => void } = $props()
 </script>
 
 <div
@@ -16,10 +16,10 @@
 		style="width: 100%; min-width: 300px; max-width: 400px"
 	>
 		<button
-			class="absolute top-2 right-2 text-gray-500 hover:text-black"
-			onclick={() => (showDialog = false)}
+			class="absolute top-2 right-2 cursor-pointer rounded bg-slate-100 px-2 py-1 text-xs text-slate-400 select-none dark:bg-slate-500 dark:text-slate-200"
+			onclick={onClose}
 		>
-			&times;
+			ESC
 		</button>
 		<h2 class="mb-2 text-xl font-bold">Settings</h2>
 

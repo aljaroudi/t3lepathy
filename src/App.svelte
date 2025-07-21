@@ -21,7 +21,6 @@
 	let showDialog = $state(false)
 	let showSidebar = $state(true)
 	let showSearch = $state(false)
-	let searchQuery = $state('')
 	let grounding = $state(false)
 	let loading = $state<string | null>(null)
 	let responseLength = persistedState<ResponseLength>(
@@ -258,9 +257,9 @@
 </main>
 
 {#if showDialog || apiKeys.isEmpty}
-	<SettingsDialog {showDialog} />
+	<SettingsDialog onClose={() => (showDialog = false)} />
 {:else if showSearch}
-	<SearchDialog {showSearch} />
+	<SearchDialog onClose={() => (showSearch = false)} />
 {/if}
 
 <svelte:window
