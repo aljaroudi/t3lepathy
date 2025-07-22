@@ -31,15 +31,6 @@ export let state = $state({
 		// get chats
 		const chats = await db.getAll('chats')
 		this.chats = chats.sort((a, b) => b.date.getTime() - a.date.getTime())
-		// get keys
-		const keys = await db.getAll('apiKeys')
-		apiKeys.value = keys.reduce(
-			(acc, key) => {
-				acc[key.provider] = key.value
-				return acc
-			},
-			{} as Record<Provider, string>
-		)
 	},
 
 	async setCurrentChat(chatId: string) {
@@ -190,8 +181,11 @@ export function getApiKeys() {
 	return JSON.parse(keys) as Record<Provider, string>
 }
 
-export function persistedState<T extends string>(key: string, initialValue: T) {
-	let value = $state<T>((localStorage.getItem(key) as T) || initialValue)
+export function persistedState<T extends string | number | boolean>(
+	key: string,
+	initialValue: T
+) {
+	let value = $state<T>(getStoredValue<T>(key, initialValue))
 
 	return {
 		get value() {
@@ -199,9 +193,20 @@ export function persistedState<T extends string>(key: string, initialValue: T) {
 		},
 		set value(newValue: T) {
 			value = newValue
-			localStorage.setItem(key, newValue)
+			localStorage.setItem(key, String(newValue))
 		},
 	}
+}
+
+function getStoredValue<T extends string | number | boolean>(
+	key: string,
+	initialValue: T
+): T {
+	let stored = localStorage.getItem(key)
+	if (stored === null) return initialValue
+	if (typeof initialValue === 'boolean') return (stored === 'true') as T
+	if (typeof initialValue === 'number') return Number(stored) as T
+	return stored as T
 }
 
 function apiKeyState() {
@@ -210,9 +215,9 @@ function apiKeyState() {
 		get value() {
 			return value
 		},
-		set value(newValue: Record<Provider, string>) {
-			value = newValue
-			localStorage.setItem('apiKeys', JSON.stringify(newValue))
+		set(provider: Provider, newValue: string) {
+			value[provider] = newValue.trim()
+			localStorage.setItem('apiKeys', JSON.stringify(value))
 		},
 		/** true if no API keys are set */
 		get isEmpty() {
