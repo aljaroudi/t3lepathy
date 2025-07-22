@@ -3,7 +3,6 @@
 	import { getFileTypes, MODELS, PROVIDERS } from './lib/ai'
 	import { apiKeys, state as db, persistedState } from './lib/db.svelte'
 	import type { Model, ResponseLength } from './lib/types'
-	import Panel from './lib/icons/Panel.svelte'
 	import { convertFileToBase64 } from './lib/storage'
 	import Sidebar from './lib/components/Sidebar.svelte'
 	import * as Select from './lib/components/ui/select/index'
