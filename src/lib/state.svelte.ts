@@ -33,7 +33,7 @@ export const apiKeys = persistedState<Record<Provider, string>>('apiKeys', {
 function createState() {
 	let stateChats = $state<Chat[]>([])
 	let stateMessages = $state<Message[]>([])
-	let currentChatId = $state<string | null>(null)
+	let currentChatId = $state<Chat['id']>(crypto.randomUUID())
 
 	return {
 		get chats() {
@@ -51,7 +51,7 @@ function createState() {
 		get currentChatId() {
 			return currentChatId
 		},
-		setCurrentChatId(id: string, messages: Message[]) {
+		setCurrentChatId(id: Chat['id'], messages: Message[]) {
 			currentChatId = id
 			stateMessages = messages
 		},

@@ -1,9 +1,9 @@
 import { ui, responseLength } from './state.svelte'
 import * as db from './db'
-import type { LLMMessage, Message, Model, ResponseLength } from './types'
+import type { LLMMessage, Message, Model, ResponseLength, UUID } from './types'
 import { expectsImage, generateResponse, generateTitle, genImage } from './ai'
 
-export async function setCurrentChat(id: string) {
+export async function setCurrentChat(id: UUID) {
 	const messages = await db.getMessages(id)
 	ui.setCurrentChatId(id, messages)
 }
@@ -33,6 +33,11 @@ export async function addMessage(
 	model: Model,
 	grounding: boolean
 ) {
+	// 0. Check if chat exists
+	if (!(await db.chatExists(msg.chatId))) {
+		await addChat('New chat')
+	}
+
 	// 1. Add user message to db
 	const txtPart = msg.content.find(m => m.type === 'text')?.text
 	if (!txtPart) return

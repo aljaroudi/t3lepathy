@@ -38,8 +38,6 @@
 	)
 
 	async function sendMessage(message: string, files: File[]) {
-		const chatId = ui.currentChatId || (await app.addChat('New chat'))
-
 		const apiKey = apiKeys.value[currentModel.provider]
 		if (!apiKey) return alert('No API key found for this model')
 		// User
@@ -49,7 +47,7 @@
 			.addMessage(
 				{
 					id: msgId,
-					chatId,
+					chatId: ui.currentChatId,
 					content: [
 						{ type: 'text' as const, text: message },
 						...(await Promise.all(files.map(convertFileToBase64))),
