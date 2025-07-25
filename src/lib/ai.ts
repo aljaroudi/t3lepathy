@@ -6,11 +6,11 @@ import {
 import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createAnthropic } from '@ai-sdk/anthropic'
-import type { ContextMessage, Model, Provider } from './types'
-import { getApiKeys, titleModel } from './db.svelte'
+import type { ContextMessage, Message, Model, Provider } from './types'
+import { apiKeys, titleModel } from './state.svelte'
 
 function getModel(model: Model, useSearchGrounding: boolean) {
-	const apiKey = getApiKeys()[model.provider]
+	const apiKey = apiKeys.value[model.provider]
 	switch (model.provider) {
 		case 'OpenAI':
 			return createOpenAI({ apiKey })(model.name)
@@ -23,49 +23,60 @@ function getModel(model: Model, useSearchGrounding: boolean) {
 	}
 }
 
-export async function genImage({
-	message,
-	ratio,
-	size,
-}: {
-	message: string
-	ratio: `${number}:${number}`
-	size: `${number}x${number}`
-}) {
-	const apiKey = getApiKeys()['OpenAI']
+export async function genImage({ message }: { message: string }) {
+	const apiKey = apiKeys.value['OpenAI']
 	if (!apiKey) throw new Error('No API key found')
 	return generateImage({
 		model: createOpenAI({ apiKey }).image('dall-e-3'),
 		prompt: message,
-		size,
-		aspectRatio: ratio,
 		seed: getSeed(),
-		maxRetries: 1,
 	})
 }
 
-export function generateResponse({
+export async function generateResponse({
 	messages,
 	model,
-	maxWords,
+	maxSentences,
 	grounding,
+	onStepFinish,
+	onChunk,
 }: {
 	messages: ContextMessage[]
 	model: Model
-	maxWords: number | null
+	maxSentences: number | null
 	grounding: boolean
+	onStepFinish: (usage: {
+		inputTokens: number | null
+		outputTokens: number | null
+	}) => void
+	onChunk: (chunk: string) => Promise<void>
 }) {
-	const systemPrompt = 'You are a friendly assistant!'
-	const result = streamText({
-		model: getModel(model, grounding),
-		system: maxWords
-			? systemPrompt + ` You will respond in ${maxWords} sentences.`
-			: systemPrompt,
-		// @ts-expect-error - TODO: update types
-		messages,
-		seed: getSeed(),
+	return new Promise<void>(async (resolve, reject) => {
+		try {
+			const systemPrompt = 'You are a friendly assistant!'
+			const result = streamText({
+				model: getModel(model, grounding),
+				system: maxSentences
+					? systemPrompt + ` You will respond in ${maxSentences} sentences.`
+					: systemPrompt,
+				// @ts-expect-error - TODO: update types
+				messages,
+				seed: getSeed(),
+				onStepFinish: ({ usage }) =>
+					onStepFinish({
+						inputTokens: usage.promptTokens ?? null,
+						outputTokens: usage.completionTokens ?? null,
+					}),
+			})
+
+			for await (const chunk of result.textStream) {
+				await onChunk(chunk)
+			}
+			resolve()
+		} catch (error) {
+			reject(error)
+		}
 	})
-	return result.textStream
 }
 
 export async function expectsImage({
@@ -117,8 +128,8 @@ export const MODELS = [
 	},
 	{
 		provider: 'Google',
-		title: 'Gemini 2.0 Flash Lite',
-		name: 'gemini-2.0-flash-lite',
+		title: 'Gemini 2.5 Flash Lite',
+		name: 'gemini-2.5-flash-lite',
 		description: 'Fastest, cheapest',
 		capabilities: new Set(['text-output', 'file-input']),
 	},
@@ -162,3 +173,40 @@ export function getFileTypes(model: Model) {
 	}
 	return types.slice(0, -1)
 }
+
+export function getPrice({ role, model, tokens }: Message) {
+	if (!tokens) return null
+	if (model === 'dall-e-3') return null
+	const price =
+		role === 'user' ? PRICES_INPUT.get(model) : PRICES_OUTPUT.get(model)
+	if (!price) return null
+	return price * tokens
+}
+
+const PRICES_INPUT = new Map<Model['name'], number>([
+	// $0.10 per 1M tokens
+	['gemini-2.5-flash-lite', 0.000_000_10],
+	// $0.30 per 1M tokens
+	['gemini-2.5-flash', 0.000_000_30],
+	// $1.25 per 1M tokens
+	['gemini-2.5-pro', 0.000_001_25],
+	// OpenAI
+	// $0.15 per 1M tokens
+	['gpt-4o-mini', 0.000_000_15],
+	// $2.50 per 1M tokens
+	['gpt-4o', 0.000_002_50],
+])
+
+const PRICES_OUTPUT = new Map<Model['name'], number>([
+	// $0.30 per 1M tokens
+	['gemini-2.5-flash-lite', 0.000_000_40],
+	// $1.25 per 1M tokens
+	['gemini-2.5-flash', 0.000_002_50],
+	// $10.00 per 1M tokens
+	['gemini-2.5-pro', 0.000_010_00],
+	// OpenAI
+	// $0.60 per 1M tokens
+	['gpt-4o-mini', 0.000_000_60],
+	// $10.00 per 1M tokens
+	['gpt-4o', 0.000_010_00],
+])
