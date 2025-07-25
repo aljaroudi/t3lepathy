@@ -80,10 +80,10 @@ export async function generateResponse({
 }
 
 export async function expectsImage({
-	message,
+	prompt,
 	model,
 }: {
-	message: UserMessage
+	prompt: string
 	model: Model
 }): Promise<boolean> {
 	if (!model.capabilities.has('image-output')) return false
@@ -91,7 +91,7 @@ export async function expectsImage({
 		model: getModel(model, false),
 		system:
 			"You are a helpful assistant that can determine if a message expects an image. If it does, return 'true'. If it doesn't, return 'false'. If you are not sure, return 'false'.",
-		messages: [{ role: 'user', content: message.content }],
+		prompt,
 	}).then(result => result.text.includes('true'))
 }
 

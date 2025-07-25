@@ -69,7 +69,7 @@ export async function addMessage(
 	const msgIdx = ui.handleNewMessage(reply)
 
 	// 4. Requested an image?
-	const imageRequested = await expectsImage({ message: msg, model })
+	const imageRequested = await expectsImage({ prompt: txtPart, model })
 	if (imageRequested) {
 		const image = await genImage({ message: txtPart })
 		const { message } = ui.addContent(msgIdx, {
