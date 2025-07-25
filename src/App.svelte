@@ -1,67 +1,69 @@
 <script lang="ts">
 	import 'highlight.js/styles/atom-one-dark.min.css'
 	import { getFileTypes, MODELS, PROVIDERS } from './lib/ai'
-	import { apiKeys, state as db, persistedState } from './lib/db.svelte'
-	import type { Model, ResponseLength } from './lib/types'
-	import Panel from './lib/icons/Panel.svelte'
+	import {
+		ui,
+		currentModelId,
+		responseLength,
+		apiKeys,
+	} from './lib/state.svelte'
+	import * as app from './lib/app'
 	import { convertFileToBase64 } from './lib/storage'
 	import Sidebar from './lib/components/Sidebar.svelte'
-	import Arrow from './lib/icons/Arrow.svelte'
 	import * as Select from './lib/components/ui/select/index'
 	import '@fontsource-variable/ibm-plex-sans'
-	import { PaperclipIcon, PlusIcon, SearchIcon } from '@lucide/svelte'
+	import {
+		ArrowUpIcon,
+		PanelLeftIcon,
+		PaperclipIcon,
+		PlusIcon,
+		SearchIcon,
+	} from '@lucide/svelte'
 	import Bubble from './lib/components/Bubble.svelte'
 	import LengthIcon from './lib/components/LengthIcon.svelte'
 	import SettingsDialog from './lib/components/SettingsDialog.svelte'
 	import SearchDialog from './lib/components/SearchDialog.svelte'
 	import ActionButton from './lib/components/ActionButton.svelte'
-
-	void db.init()
+	import { persistedState } from './lib/persisted-state.svelte'
 
 	let showDialog = $state(false)
-	let showSidebar = $state(true)
 	let showSearch = $state(false)
-	let searchQuery = $state('')
 	let grounding = $state(false)
 	let loading = $state<string | null>(null)
-	let responseLength = persistedState<ResponseLength>(
-		'responseLength',
-		'medium'
-	)
-	let currentModelId = persistedState<Model['name']>(
-		'currentModel',
-		'gemini-2.0-flash-lite'
-	)
-	let textInput = persistedState<string>('textInput', '')
+
+	const textInput = persistedState<string>('textInput', '')
 	const currentModel = $derived(
 		MODELS.find(m => m.name === currentModelId.value)!
 	)
+	const showSidebar = persistedState('showSidebar', true)
 
 	async function sendMessage(message: string, files: File[]) {
-		const chatId = db.currentChatId || (await db.addChat('New chat'))
-
 		const apiKey = apiKeys.value[currentModel.provider]
 		if (!apiKey) return alert('No API key found for this model')
 		// User
 		const msgId = crypto.randomUUID()
 		loading = msgId
-		await db
+		await app
 			.addMessage(
 				{
 					id: msgId,
-					chatId,
+					chatId: ui.currentChatId,
 					content: [
 						{ type: 'text' as const, text: message },
 						...(await Promise.all(files.map(convertFileToBase64))),
 					],
 					role: 'user',
-					date: new Date(),
+					date: Date.now(),
+					tokens: 0,
+					model: currentModel.name,
 				},
 				currentModel,
-				responseLength.value,
 				grounding
 			)
-			.catch(() => alert('Error sending message'))
+			.catch(e => {
+				console.error(e)
+				alert(`Error sending message: ${e.message}`)
+			})
 			.finally(() => (loading = null))
 	}
 
@@ -82,17 +84,17 @@
 
 <main
 	class="grid h-dvh w-full transition-all duration-300 ease-in-out dark:bg-slate-800 dark:text-slate-100"
-	data-sidebar={showSidebar}
+	data-sidebar={showSidebar.value}
 	style="grid-template-columns: var(--sidebar-width) 1fr"
 >
-	{#if showSidebar}
+	{#if showSidebar.value}
 		<Sidebar
-			onClose={() => (showSidebar = false)}
+			onClose={() => (showSidebar.value = false)}
 			onCreateChat={() => {
-				if (db.messages.length) db.addChat('New chat')
+				if (ui.messages.length) app.addChat('New chat')
 				jumpToTextInput()
 			}}
-			onSelectChat={chatId => db.setCurrentChat(chatId)}
+			onSelectChat={chatId => app.setCurrentChat(chatId)}
 			{showDialog}
 			onShowDialog={() => (showDialog = true)}
 		/>
@@ -104,13 +106,13 @@
 			<button
 				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
 				style="transform: rotate(180deg)"
-				onclick={() => (showSidebar = true)}
+				onclick={() => (showSidebar.value = true)}
 			>
-				<Panel />
+				<PanelLeftIcon size="1em" />
 			</button>
 			<button
 				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
-				onclick={() => db.addChat('New chat')}
+				onclick={() => app.addChat('New chat')}
 			>
 				<PlusIcon size="1em" />
 			</button>
@@ -125,7 +127,7 @@
 				class="mx-auto flex w-full flex-1 flex-col gap-4"
 				style="width: var(--content-width)"
 			>
-				{#each db.messages as message}
+				{#each ui.messages as message}
 					<Bubble {message} loading={loading === message.id} />
 				{/each}
 			</div>
@@ -247,17 +249,17 @@
 					type="submit"
 					disabled={!textInput.value.trim().length}
 				>
-					<Arrow />
+					<ArrowUpIcon size="1em" />
 				</ActionButton>
 			</div>
 		</form>
 	</section>
 </main>
 
-{#if showDialog || apiKeys.isEmpty}
-	<SettingsDialog {showDialog} />
+{#if showDialog || Object.values(apiKeys.value).every(v => v.trim() === '')}
+	<SettingsDialog onClose={() => (showDialog = false)} />
 {:else if showSearch}
-	<SearchDialog {showSearch} {searchQuery} />
+	<SearchDialog onClose={() => (showSearch = false)} />
 {/if}
 
 <svelte:window
@@ -267,7 +269,7 @@
 		} else if (e.key === 'Enter' && e.metaKey) {
 			document.getElementById('submit')?.click()
 		} else if (e.key === 'b' && e.metaKey) {
-			showSidebar = !showSidebar
+			showSidebar.value = !showSidebar.value
 		} else if (e.key === 'k' && e.metaKey) {
 			showSearch = !showSearch
 		} else if (e.key === ',' && e.metaKey && e.shiftKey) {

@@ -2,91 +2,116 @@ import {
 	generateText,
 	streamText,
 	experimental_generateImage as generateImage,
+	type ModelMessage as CoreMessage,
 } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createAnthropic } from '@ai-sdk/anthropic'
-import type { ContextMessage, Model, Provider } from './types'
-import { getApiKeys, titleModel } from './db.svelte'
+import type { Message, Model, Provider } from './types'
+import { apiKeys, titleModel } from './state.svelte'
 
 function getModel(model: Model, useSearchGrounding: boolean) {
-	const apiKey = getApiKeys()[model.provider]
+	const apiKey = apiKeys.value[model.provider]
 	switch (model.provider) {
 		case 'OpenAI':
-			return createOpenAI({ apiKey })(model.name)
+			const openai = createOpenAI({ apiKey })
+			return {
+				model: openai(model.name),
+				tools: useSearchGrounding
+					? { webSearch: openai.tools.webSearchPreview({}) }
+					: undefined,
+			}
 		case 'Google':
-			return createGoogleGenerativeAI({ apiKey })(model.name, {
-				useSearchGrounding,
-			})
+			const google = createGoogleGenerativeAI({ apiKey })
+			return {
+				model: google(model.name),
+				tools: useSearchGrounding
+					? { webSearch: google.tools.googleSearch({}) }
+					: undefined,
+			}
 		case 'Anthropic':
-			return createAnthropic({ apiKey })(model.name)
+			const anthropic = createAnthropic({ apiKey })
+			return {
+				model: anthropic(model.name),
+				tools: { webSearch: anthropic.tools.webSearch_20250305() },
+			}
 	}
 }
 
-export async function genImage({
-	message,
-	ratio,
-	size,
-}: {
-	message: string
-	ratio: `${number}:${number}`
-	size: `${number}x${number}`
-}) {
-	const apiKey = getApiKeys()['OpenAI']
+export async function genImage({ message }: { message: string }) {
+	const apiKey = apiKeys.value['OpenAI']
 	if (!apiKey) throw new Error('No API key found')
 	return generateImage({
-		model: createOpenAI({ apiKey }).image('dall-e-3'),
+		model: createOpenAI({ apiKey }).imageModel('dall-e-3'),
 		prompt: message,
-		size,
-		aspectRatio: ratio,
 		seed: getSeed(),
-		maxRetries: 1,
 	})
 }
 
-export function generateResponse({
+export async function generateResponse({
 	messages,
 	model,
-	maxWords,
+	maxSentences,
 	grounding,
+	onStepFinish,
+	onChunk,
 }: {
-	messages: ContextMessage[]
+	messages: CoreMessage[]
 	model: Model
-	maxWords: number | null
+	maxSentences: number | null
 	grounding: boolean
+	onStepFinish: (usage: {
+		inputTokens: number | undefined
+		outputTokens: number | undefined
+	}) => void
+	onChunk: (chunk: string) => Promise<void>
 }) {
-	const systemPrompt = 'You are a friendly assistant!'
-	const result = streamText({
-		model: getModel(model, grounding),
-		system: maxWords
-			? systemPrompt + ` You will respond in ${maxWords} sentences.`
-			: systemPrompt,
-		// @ts-expect-error - TODO: update types
-		messages,
-		seed: getSeed(),
+	return new Promise<void>(async (resolve, reject) => {
+		try {
+			const systemPrompt = 'You are a friendly assistant!'
+			const { model: modelObject, tools } = getModel(model, grounding)
+
+			const result = streamText({
+				model: modelObject,
+				system: maxSentences
+					? systemPrompt + ` You will respond in ${maxSentences} sentences.`
+					: systemPrompt,
+				messages,
+				seed: getSeed(),
+				onStepFinish: ({ usage }) => onStepFinish(usage),
+				tools,
+			})
+
+			for await (const chunk of result.textStream) {
+				await onChunk(chunk)
+			}
+			resolve()
+		} catch (error) {
+			reject(error)
+		}
 	})
-	return result.textStream
 }
 
 export async function expectsImage({
-	message,
+	prompt,
 	model,
 }: {
-	message: ContextMessage
+	prompt: string
 	model: Model
 }): Promise<boolean> {
 	if (!model.capabilities.has('image-output')) return false
 	return generateText({
-		model: getModel(model, false),
+		model: getModel(model, false).model,
 		system:
 			"You are a helpful assistant that can determine if a message expects an image. If it does, return 'true'. If it doesn't, return 'false'. If you are not sure, return 'false'.",
-		messages: [{ role: 'user', content: message.content }],
+		prompt,
 	}).then(result => result.text.includes('true'))
 }
 
 export async function generateTitle({ message }: { message: string }) {
 	return generateText({
-		model: getModel(MODELS.find(m => m.name === titleModel.value)!, false),
+		model: getModel(MODELS.find(m => m.name === titleModel.value)!, false)
+			.model,
 		system:
 			"Generate a short, descriptive title (max 5 words) for this conversation based on the user's first message. The title should capture the main topic or purpose of the discussion.",
 		messages: [{ role: 'user', content: message }],
@@ -117,8 +142,8 @@ export const MODELS = [
 	},
 	{
 		provider: 'Google',
-		title: 'Gemini 2.0 Flash Lite',
-		name: 'gemini-2.0-flash-lite',
+		title: 'Gemini 2.5 Flash Lite',
+		name: 'gemini-2.5-flash-lite',
 		description: 'Fastest, cheapest',
 		capabilities: new Set(['text-output', 'file-input']),
 	},
@@ -138,8 +163,8 @@ export const MODELS = [
 	},
 	{
 		provider: 'Anthropic',
-		title: 'Claude 3.5 Sonnet',
-		name: 'claude-3-5-sonnet-20240620',
+		title: 'Claude 4 Sonnet',
+		name: 'claude-4-sonnet-20250514',
 		description: 'Smart, balanced Claude',
 		capabilities: new Set(['text-output', 'file-input']),
 	},
@@ -162,3 +187,40 @@ export function getFileTypes(model: Model) {
 	}
 	return types.slice(0, -1)
 }
+
+export function getPrice({ role, model, tokens }: Message) {
+	if (!tokens) return null
+	if (model === 'dall-e-3') return null
+	const price =
+		role === 'user' ? PRICES_INPUT.get(model) : PRICES_OUTPUT.get(model)
+	if (!price) return null
+	return price * tokens
+}
+
+const PRICES_INPUT = new Map<Model['name'], number>([
+	// $0.10 per 1M tokens
+	['gemini-2.5-flash-lite', 0.000_000_10],
+	// $0.30 per 1M tokens
+	['gemini-2.5-flash', 0.000_000_30],
+	// $1.25 per 1M tokens
+	['gemini-2.5-pro', 0.000_001_25],
+	// OpenAI
+	// $0.15 per 1M tokens
+	['gpt-4o-mini', 0.000_000_15],
+	// $2.50 per 1M tokens
+	['gpt-4o', 0.000_002_50],
+])
+
+const PRICES_OUTPUT = new Map<Model['name'], number>([
+	// $0.30 per 1M tokens
+	['gemini-2.5-flash-lite', 0.000_000_40],
+	// $1.25 per 1M tokens
+	['gemini-2.5-flash', 0.000_002_50],
+	// $10.00 per 1M tokens
+	['gemini-2.5-pro', 0.000_010_00],
+	// OpenAI
+	// $0.60 per 1M tokens
+	['gpt-4o-mini', 0.000_000_60],
+	// $10.00 per 1M tokens
+	['gpt-4o', 0.000_010_00],
+])

@@ -132,6 +132,7 @@ code.hljs {
 }
 
 
-main[data-sidebar="false"] {
-  --sidebar-width: 0px;
+main[data-sidebar='false'] {
+  --sidebar-width: 0;
+  --content-width: calc(min(800px, 0) - 2rem);
 }

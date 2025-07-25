@@ -4,33 +4,39 @@ import type { createGoogleGenerativeAI } from '@ai-sdk/google'
 import type { createAnthropic } from '@ai-sdk/anthropic'
 import type { FilePart, ImagePart, TextPart } from 'ai'
 
-export type Chat = {
-	id: string
+type Chat = {
+	id: UUID
 	title: string
-	date: Date
+	date: number
 }
 
-export type UserContextMessage = {
+type UserContextMessage = {
 	role: 'user'
 	content: Array<TextPart | ImagePart | FilePart>
 }
-export type LLMContextMessage = {
+type LLMContextMessage = {
 	role: 'assistant'
-	content: Array<TextPart | ImagePart>
+	content: Array<TextPart | ImagePart | FilePart>
 }
-export type ContextMessage = UserContextMessage | LLMContextMessage
+type ContextMessage = UserContextMessage | LLMContextMessage
 
-type MessageBase = { id: string; chatId: string; date: Date }
-type UserMessage = ContextMessage & MessageBase
-type LLMMessage = ContextMessage & MessageBase
-export type Message = UserMessage | LLMMessage
+type MessageBase = {
+	id: UUID
+	chatId: UUID
+	date: number
+	tokens: number | null
+	model: Model['name']
+}
+type UserMessage = UserContextMessage & MessageBase
+type LLMMessage = LLMContextMessage & MessageBase
+type Message = UserMessage | LLMMessage
 
 type ApiKey = {
 	provider: Provider
 	value: string
 }
 
-export interface ChatDB extends DBSchema {
+interface ChatDB extends DBSchema {
 	chats: {
 		key: string
 		value: Chat
@@ -56,7 +62,7 @@ type Capabilities =
 	| 'text-output'
 	| 'image-output'
 
-export type Model =
+type Model =
 	| {
 			provider: 'OpenAI'
 			name: OpenAIModel
@@ -82,3 +88,7 @@ export type Model =
 type Provider = Model['provider']
 
 type ResponseLength = 'short' | 'medium' | 'open'
+
+type JsonValue = string | number | boolean | Record | null
+
+type UUID = `${string}-${string}-${string}-${string}-${string}`
