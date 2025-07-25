@@ -1,12 +1,16 @@
 <script lang="ts">
 	import { AlertTriangleIcon } from '@lucide/svelte'
 	import { MODELS, PROVIDERS } from '../ai'
-	import { apiKeys, systemPrompt, titleModel } from '../db.svelte'
+	import { apiKeys, systemPrompt, titleModel } from '../state.svelte'
 	import { isValidApiKey } from '../validate'
 	import * as Select from './ui/select/index'
 	import Dialog from './Dialog.svelte'
+	import ProviderLogo from '../icons/ProviderLogo.svelte'
 
 	let { onClose }: { onClose: () => void } = $props()
+	let noApiKeys = $derived(
+		Object.values(apiKeys.value).every(v => v.trim() === '')
+	)
 </script>
 
 <Dialog {onClose}>
@@ -19,7 +23,7 @@
 	<h2 class="mb-2 text-xl font-bold">Settings</h2>
 
 	<!-- show warning message if no api keys -->
-	{#if apiKeys.isEmpty}
+	{#if noApiKeys}
 		<p
 			class="flex items-center gap-1 rounded-lg bg-amber-50 p-2 text-sm text-amber-600"
 		>
@@ -32,16 +36,24 @@
 	<div class="flex flex-col gap-2">
 		<span class="text-sm text-gray-500">API keys</span>
 		{#each PROVIDERS as provider}
-			<div class="grid grid-cols-4 items-center gap-2">
-				<label for={`apiKey-${provider}`}>{provider}</label>
+			<div
+				class="rounded-lg border-none p-2 aria-disabled:bg-rose-200 dark:bg-slate-100 dark:text-slate-800"
+			>
+				<label for={`apiKey-${provider}`} class="flex items-center gap-2">
+					<ProviderLogo {provider} />
+					<span class="text-sm font-light">{provider}</span>
+					<!-- usage -->
+					<span class="ml-auto text-xs text-gray-500">
+						{apiKeys.value[provider]?.length || 0} / 100
+					</span>
+				</label>
 				<input
 					type="text"
-					name={`apiKey-${provider}`}
 					id={`apiKey-${provider}`}
 					placeholder={`${provider} API key`}
-					class="col-span-3 rounded-lg border-none p-2 aria-disabled:bg-rose-200 dark:bg-slate-100 dark:text-slate-800"
+					class="w-full border-none bg-transparent p-0 outline-none focus:ring-0"
 					aria-disabled={!isValidApiKey(provider, apiKeys.value[provider])}
-					value={apiKeys.value[provider] || ''}
+					value={apiKeys.value[provider]}
 					oninput={({ currentTarget: { value } }) => {
 						apiKeys.value = { ...apiKeys.value, [provider]: value.trim() }
 					}}
