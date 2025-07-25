@@ -7,7 +7,7 @@ import type { FilePart, ImagePart, TextPart } from 'ai'
 export type Chat = {
 	id: string
 	title: string
-	date: Date
+	date: number
 }
 
 export type UserContextMessage = {
@@ -20,7 +20,13 @@ export type LLMContextMessage = {
 }
 export type ContextMessage = UserContextMessage | LLMContextMessage
 
-type MessageBase = { id: string; chatId: string; date: Date }
+type MessageBase = {
+	id: string
+	chatId: string
+	date: number
+	tokens: number | null
+	model: Model['name']
+}
 type UserMessage = ContextMessage & MessageBase
 type LLMMessage = ContextMessage & MessageBase
 export type Message = UserMessage | LLMMessage
@@ -82,3 +88,5 @@ export type Model =
 type Provider = Model['provider']
 
 type ResponseLength = 'short' | 'medium' | 'open'
+
+type JsonValue = string | number | boolean | Record | null
