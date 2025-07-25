@@ -5,7 +5,7 @@ import type { createAnthropic } from '@ai-sdk/anthropic'
 import type { FilePart, ImagePart, TextPart } from 'ai'
 
 type Chat = {
-	id: string
+	id: UUID
 	title: string
 	date: number
 }
@@ -21,8 +21,8 @@ type LLMContextMessage = {
 type ContextMessage = UserContextMessage | LLMContextMessage
 
 type MessageBase = {
-	id: string
-	chatId: string
+	id: UUID
+	chatId: UUID
 	date: number
 	tokens: number | null
 	model: Model['name']
@@ -90,3 +90,5 @@ type Provider = Model['provider']
 type ResponseLength = 'short' | 'medium' | 'open'
 
 type JsonValue = string | number | boolean | Record | null
+
+type UUID = `${string}-${string}-${string}-${string}-${string}`

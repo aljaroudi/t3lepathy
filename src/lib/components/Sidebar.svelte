@@ -11,6 +11,7 @@
 	} from '@lucide/svelte'
 	import ActionButton from './ActionButton.svelte'
 	import { deleteChat } from '../app'
+	import type { UUID } from '../types'
 
 	getChats().then(chats => {
 		ui.chats = chats
@@ -25,7 +26,7 @@
 	}: {
 		onClose: () => void
 		onCreateChat: () => void
-		onSelectChat: (chatId: string) => void
+		onSelectChat: (chatId: UUID) => void
 		showDialog: boolean
 		onShowDialog: () => void
 	} = $props()
