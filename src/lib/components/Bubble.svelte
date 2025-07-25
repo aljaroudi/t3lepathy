@@ -7,6 +7,7 @@
 	import ClipboardButton from './ClipboardButton.svelte'
 
 	let { message, loading }: { message: Message; loading: boolean } = $props()
+	let bubbleElement = $state<HTMLElement | null>(null)
 
 	const attachments = $derived(
 		message.content.filter(part => part.type !== 'text')
@@ -16,6 +17,28 @@
 	const textParts = $derived(
 		message.content.filter(part => part.type === 'text') as TextPart[]
 	)
+
+	// Auto-scroll to bottom when this bubble's content changes
+	$effect(() => {
+		// Track the text content and loading state to trigger scroll
+		textParts.forEach(part => part.text)
+
+		if (!bubbleElement) return
+
+		// Find the scrollable container (the overflow-y-auto div)
+		const scrollContainer = bubbleElement.closest(
+			'.overflow-y-auto'
+		) as HTMLElement
+		if (!scrollContainer) return
+
+		// Use requestAnimationFrame to ensure DOM updates are complete
+		requestAnimationFrame(() => {
+			scrollContainer.scrollTo({
+				top: scrollContainer.scrollHeight,
+				behavior: 'smooth',
+			})
+		})
+	})
 </script>
 
 <section
@@ -24,6 +47,7 @@
 		: ''}
 	style="max-width: min(var(--content-width), {maxWidth})"
 	aria-busy={loading}
+	bind:this={bubbleElement}
 >
 	{#each textParts as part}
 		{@html marked.parse(part.text)}
