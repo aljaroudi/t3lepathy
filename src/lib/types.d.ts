@@ -16,7 +16,7 @@ type UserContextMessage = {
 }
 type LLMContextMessage = {
 	role: 'assistant'
-	content: Array<TextPart | ImagePart | FilePart | ReasoningPart>
+	content: Array<TextPart | ImagePart | FilePart>
 }
 type ContextMessage = UserContextMessage | LLMContextMessage
 
@@ -90,9 +90,3 @@ type Provider = Model['provider']
 type ResponseLength = 'short' | 'medium' | 'open'
 
 type JsonValue = string | number | boolean | Record | null
-
-// AI SDK types
-type ReasoningPart = {
-	type: 'reasoning'
-	text: string
-}
