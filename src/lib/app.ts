@@ -76,11 +76,11 @@ export async function addMessage(
 	// 4. Requested an image?
 	const imageRequested = await expectsImage({ prompt: txtPart, model })
 	if (imageRequested) {
-		const image = await genImage({ message: txtPart })
+		const { image } = await genImage({ message: txtPart })
 		const { message } = ui.addContent(msgIdx, {
 			type: 'image',
-			image: `data:${image.image.mimeType};base64,${image.image.base64}`,
-			mimeType: image.image.mimeType,
+			image: `data:${image.mediaType};base64,${image.base64}`,
+			mediaType: image.mediaType,
 		})
 		await db.handleUpdateMessage(message)
 	} else {
@@ -92,9 +92,9 @@ export async function addMessage(
 			maxSentences: LENGTH_IN_SENTENCES[responseLength.value],
 			grounding,
 			onStepFinish: async ({ inputTokens, outputTokens }) => {
-				ui.messages[msgIdx - 1].tokens = inputTokens
+				ui.messages[msgIdx - 1].tokens = inputTokens ?? null
 				await db.handleUpdateMessage(ui.messages[msgIdx - 1])
-				ui.messages[msgIdx].tokens = outputTokens
+				ui.messages[msgIdx].tokens = outputTokens ?? null
 				await db.handleUpdateMessage(ui.messages[msgIdx])
 			},
 			onChunk: async chunk => {

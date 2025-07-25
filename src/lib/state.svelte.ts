@@ -58,6 +58,7 @@ function createState() {
 		handleNewChat(chat: Chat) {
 			stateChats.unshift(chat)
 			currentChatId = chat.id
+			stateMessages = []
 			return chat
 		},
 		handleNewMessage(message: Message) {

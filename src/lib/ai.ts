@@ -42,7 +42,7 @@ export async function genImage({ message }: { message: string }) {
 	const apiKey = apiKeys.value['OpenAI']
 	if (!apiKey) throw new Error('No API key found')
 	return generateImage({
-		model: createOpenAI({ apiKey }).image('dall-e-3'),
+		model: createOpenAI({ apiKey }).imageModel('dall-e-3'),
 		prompt: message,
 		seed: getSeed(),
 	})

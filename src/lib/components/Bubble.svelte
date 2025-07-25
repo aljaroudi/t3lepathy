@@ -66,7 +66,7 @@
 					/>
 				{:else if attachment.type === 'file'}
 					<p class="rounded-full bg-cyan-700 px-3 py-1 text-sm text-white">
-						{attachment.filename || `${attachment.mimeType} file`}
+						{attachment.filename || `${attachment.mediaType} file`}
 					</p>
 				{/if}
 			{/each}
