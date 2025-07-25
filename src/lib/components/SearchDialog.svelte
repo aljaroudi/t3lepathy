@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { PlusIcon, SearchIcon } from '@lucide/svelte'
-	import { state as db } from '../db.svelte'
+	import { setCurrentChat } from '../app'
+	import { ui } from '../state.svelte'
 	import Dialog from './Dialog.svelte'
 
 	let { onClose }: { onClose: () => void } = $props()
@@ -36,7 +37,7 @@
 	</div>
 	<div class="flex flex-col gap-2">
 		{#if searchQuery.length}
-			{@const filteredMessages = db.chats
+			{@const filteredMessages = ui.chats
 				.filter(chat =>
 					chat.title.toLowerCase().includes(searchQuery.toLowerCase())
 				)
@@ -46,7 +47,7 @@
 					<button
 						class="rounded-xl px-2 py-1 text-left"
 						onclick={() => {
-							db.setCurrentChat(chat.id)
+							void setCurrentChat(chat.id)
 							onClose()
 						}}
 					>
@@ -57,11 +58,11 @@
 				<p class="text-gray-500">No messages found</p>
 			{/if}
 		{:else}
-			{#each db.chats.slice(0, 5) as chat}
+			{#each ui.chats.slice(0, 5) as chat}
 				<button
 					class="rounded-xl px-2 py-1 text-left"
 					onclick={() => {
-						db.setCurrentChat(chat.id)
+						void setCurrentChat(chat.id)
 						onClose()
 					}}
 				>
