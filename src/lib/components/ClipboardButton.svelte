@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { CopyIcon } from '@lucide/svelte'
-	import CheckIcon from '@lucide/svelte/icons/check'
 
-	// Svelte 5 Runes
 	let { text }: { text: string } = $props()
 	let copied = $state(false)
 	let timeout: ReturnType<typeof setTimeout> | null = null
@@ -16,13 +14,10 @@
 </script>
 
 <button
-	class="cursor-pointer text-xs text-slate-500 hover:text-slate-700"
+	class="cursor-pointer text-xs text-slate-500 transition-colors hover:text-slate-700 aria-pressed:text-green-600"
 	onclick={handleCopy}
 	title="Copy to clipboard"
+	aria-pressed={copied}
 >
-	{#if copied}
-		<CheckIcon size="1.25em" class="text-green-600" />
-	{:else}
-		<CopyIcon size="1.25em" />
-	{/if}
+	<CopyIcon size="1.25em" />
 </button>
