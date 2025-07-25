@@ -4,21 +4,21 @@ import type { createGoogleGenerativeAI } from '@ai-sdk/google'
 import type { createAnthropic } from '@ai-sdk/anthropic'
 import type { FilePart, ImagePart, TextPart } from 'ai'
 
-export type Chat = {
+type Chat = {
 	id: string
 	title: string
 	date: number
 }
 
-export type UserContextMessage = {
+type UserContextMessage = {
 	role: 'user'
 	content: Array<TextPart | ImagePart | FilePart>
 }
-export type LLMContextMessage = {
+type LLMContextMessage = {
 	role: 'assistant'
 	content: Array<TextPart | ImagePart | FilePart | ReasoningPart>
 }
-export type ContextMessage = UserContextMessage | LLMContextMessage
+type ContextMessage = UserContextMessage | LLMContextMessage
 
 type MessageBase = {
 	id: string
@@ -29,14 +29,14 @@ type MessageBase = {
 }
 type UserMessage = UserContextMessage & MessageBase
 type LLMMessage = LLMContextMessage & MessageBase
-export type Message = UserMessage | LLMMessage
+type Message = UserMessage | LLMMessage
 
 type ApiKey = {
 	provider: Provider
 	value: string
 }
 
-export interface ChatDB extends DBSchema {
+interface ChatDB extends DBSchema {
 	chats: {
 		key: string
 		value: Chat
@@ -62,7 +62,7 @@ type Capabilities =
 	| 'text-output'
 	| 'image-output'
 
-export type Model =
+type Model =
 	| {
 			provider: 'OpenAI'
 			name: OpenAIModel
