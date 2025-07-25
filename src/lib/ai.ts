@@ -14,7 +14,7 @@ function getModel(model: Model, useSearchGrounding: boolean) {
 	const apiKey = apiKeys.value[model.provider]
 	switch (model.provider) {
 		case 'OpenAI':
-			return createOpenAI({ apiKey })(model.name)
+			return createOpenAI({ apiKey, compatibility: 'strict' })(model.name)
 		case 'Google':
 			return createGoogleGenerativeAI({ apiKey })(model.name, {
 				useSearchGrounding,
@@ -67,6 +67,10 @@ export async function generateResponse({
 						inputTokens: usage.promptTokens ?? null,
 						outputTokens: usage.completionTokens ?? null,
 					}),
+				onFinish: ({ usage, providerMetadata }) => {
+					console.log('usage', usage)
+					console.log('providerMetadata', providerMetadata)
+				},
 			})
 
 			for await (const chunk of result.textStream) {
