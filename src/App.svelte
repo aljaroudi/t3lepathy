@@ -27,7 +27,6 @@
 	import { persistedState } from './lib/persisted-state.svelte'
 
 	let showDialog = $state(false)
-	let showSidebar = $state(true)
 	let showSearch = $state(false)
 	let grounding = $state(false)
 	let loading = $state<string | null>(null)
@@ -36,6 +35,7 @@
 	const currentModel = $derived(
 		MODELS.find(m => m.name === currentModelId.value)!
 	)
+	const showSidebar = persistedState('showSidebar', true)
 
 	async function sendMessage(message: string, files: File[]) {
 		const apiKey = apiKeys.value[currentModel.provider]
@@ -84,12 +84,12 @@
 
 <main
 	class="grid h-dvh w-full transition-all duration-300 ease-in-out dark:bg-slate-800 dark:text-slate-100"
-	data-sidebar={showSidebar}
+	data-sidebar={showSidebar.value}
 	style="grid-template-columns: var(--sidebar-width) 1fr"
 >
-	{#if showSidebar}
+	{#if showSidebar.value}
 		<Sidebar
-			onClose={() => (showSidebar = false)}
+			onClose={() => (showSidebar.value = false)}
 			onCreateChat={() => {
 				if (ui.messages.length) app.addChat('New chat')
 				jumpToTextInput()
@@ -106,7 +106,7 @@
 			<button
 				class="flex size-10 cursor-pointer items-center justify-center rounded-lg p-2 transition-all duration-300 ease-in-out hover:bg-slate-200"
 				style="transform: rotate(180deg)"
-				onclick={() => (showSidebar = true)}
+				onclick={() => (showSidebar.value = true)}
 			>
 				<PanelLeftIcon size="1em" />
 			</button>
@@ -269,7 +269,7 @@
 		} else if (e.key === 'Enter' && e.metaKey) {
 			document.getElementById('submit')?.click()
 		} else if (e.key === 'b' && e.metaKey) {
-			showSidebar = !showSidebar
+			showSidebar.value = !showSidebar.value
 		} else if (e.key === 'k' && e.metaKey) {
 			showSearch = !showSearch
 		} else if (e.key === ',' && e.metaKey && e.shiftKey) {
