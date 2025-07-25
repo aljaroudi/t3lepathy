@@ -8,9 +8,9 @@ export async function setCurrentChat(id: UUID) {
 	ui.setCurrentChatId(id, messages)
 }
 
-export async function addChat(title: string) {
+export async function addChat(title: string, id?: UUID) {
 	const chat = ui.handleNewChat({
-		id: crypto.randomUUID(),
+		id: id ?? crypto.randomUUID(),
 		title,
 		date: Date.now(),
 	})
@@ -35,7 +35,7 @@ export async function addMessage(
 ) {
 	// 0. Check if chat exists
 	if (!(await db.chatExists(msg.chatId))) {
-		await addChat('New chat')
+		await addChat('New chat', msg.chatId)
 	}
 
 	// 1. Add user message to db

@@ -1,5 +1,5 @@
 import { openDB } from 'idb'
-import type { Chat, ChatDB, Message } from './types'
+import type { Chat, ChatDB, Message, UUID } from './types'
 
 const dbPromise = openDB<ChatDB>('chat-db', 1, {
 	upgrade(db) {
@@ -47,4 +47,10 @@ export async function getChats() {
 	const db = await dbPromise
 	const chats = await db.getAll('chats')
 	return chats.sort((a, b) => b.date - a.date)
+}
+
+export async function chatExists(chatId: UUID) {
+	const db = await dbPromise
+	const chat = await db.get('chats', chatId)
+	return !!chat
 }
