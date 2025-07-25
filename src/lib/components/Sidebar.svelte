@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { apiKeys, state as db } from '../db.svelte'
+	import { ui, apiKeys } from '../state.svelte'
+	import { getChats } from '../db'
 	import { dateToRelativeTime } from '../date'
 	import {
 		PanelLeftIcon,
@@ -9,6 +10,11 @@
 		Trash2Icon,
 	} from '@lucide/svelte'
 	import ActionButton from './ActionButton.svelte'
+	import { deleteChat } from '../app'
+
+	getChats().then(chats => {
+		ui.chats = chats
+	})
 
 	let {
 		onClose,
@@ -25,12 +31,12 @@
 	} = $props()
 
 	let searchQuery = $state('')
-	const groupedChats = $derived(
+	let groupedChats = $derived(
 		Object.groupBy(
-			db.chats.filter(chat =>
+			ui.chats.filter(chat =>
 				chat.title.toLowerCase().includes(searchQuery.toLowerCase())
 			),
-			chat => dateToRelativeTime(chat.date)
+			chat => dateToRelativeTime(new Date(chat.date))
 		)
 	)
 </script>
@@ -59,7 +65,7 @@
 			title="Settings"
 			aria-pressed={showDialog}
 			style="border-radius: 50%"
-			aria-busy={apiKeys.isEmpty}
+			aria-busy={Object.values(apiKeys.value).every(v => v.trim() === '')}
 			onclick={onShowDialog}
 		>
 			<Settings size="1em" class="hover:animate-spin" />
@@ -93,17 +99,17 @@
 					{#each chats as chat}
 						<button
 							class="flex cursor-pointer rounded-lg p-2 text-left hover:bg-white aria-pressed:bg-white aria-pressed:shadow-xs dark:text-slate-200 dark:aria-pressed:bg-slate-200 dark:aria-pressed:text-slate-800"
-							aria-pressed={db.currentChatId === chat.id}
+							aria-pressed={ui.currentChatId === chat.id}
 							onclick={() => onSelectChat(chat.id)}
 						>
 							<span class="block w-full truncate" style="min-width: 0;">
 								{chat.title}
 							</span>
-							{#if db.currentChatId === chat.id}
+							{#if ui.currentChatId === chat.id}
 								<!-- svelte-ignore node_invalid_placement_ssr -->
 								<button
 									class="ml-auto cursor-pointer rounded-lg p-1 hover:bg-slate-200"
-									onclick={() => db.deleteChat(chat.id)}
+									onclick={() => void deleteChat(chat.id)}
 								>
 									<Trash2Icon size="1em" />
 								</button>
