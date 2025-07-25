@@ -4,7 +4,7 @@
 	import { marked } from './markdown'
 	import { cn } from '../utils'
 	import { getPrice } from '../ai'
-	import { ClipboardCopyIcon } from '@lucide/svelte'
+	import { CopyIcon } from '@lucide/svelte'
 
 	let { message, loading }: { message: Message; loading: boolean } = $props()
 
@@ -48,7 +48,9 @@
 			{/each}
 		</div>
 	{/if}
-	<div class="flex items-center gap-2 p-2">
+	<div
+		class="flex items-center gap-2 py-2 {message.role === 'user' ? '' : 'px-2'}"
+	>
 		<!-- copy to clipboard button -->
 		<button
 			class="cursor-pointer text-xs text-slate-500 hover:text-slate-700"
@@ -56,7 +58,7 @@
 				navigator.clipboard.writeText(textParts.map(p => p.text).join('\n'))}
 			title="Copy to clipboard"
 		>
-			<ClipboardCopyIcon size="1.25em" />
+			<CopyIcon size="1.25em" />
 		</button>
 		{#if message.tokens}
 			<p class="text-xs text-slate-500">
