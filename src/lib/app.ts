@@ -24,8 +24,17 @@ export async function renameChat(id: string, newTitle: string) {
 }
 
 export async function deleteChat(id: string) {
+	// index of current chat
+	const currentChatIndex = ui.chats.findIndex(c => c.id === id)
+
 	ui.deleteChat(id)
 	await db.handleDeleteChat(id)
+
+	// select next chat
+	// if the current index has a chat, select it. Otherwise create a new one
+	const chatId = ui.chats[currentChatIndex]?.id
+	if (chatId) await setCurrentChat(chatId)
+	else await addChat('New chat')
 }
 
 export async function addMessage(
