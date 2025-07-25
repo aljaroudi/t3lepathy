@@ -2,25 +2,39 @@ import {
 	generateText,
 	streamText,
 	experimental_generateImage as generateImage,
-	type CoreMessage,
+	type ModelMessage as CoreMessage,
 } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createAnthropic } from '@ai-sdk/anthropic'
-import type { Message, Model, Provider, UserMessage } from './types'
+import type { Message, Model, Provider } from './types'
 import { apiKeys, titleModel } from './state.svelte'
 
 function getModel(model: Model, useSearchGrounding: boolean) {
 	const apiKey = apiKeys.value[model.provider]
 	switch (model.provider) {
 		case 'OpenAI':
-			return createOpenAI({ apiKey, compatibility: 'strict' })(model.name)
+			const openai = createOpenAI({ apiKey })
+			return {
+				model: openai(model.name),
+				tools: useSearchGrounding
+					? { webSearch: openai.tools.webSearchPreview({}) }
+					: undefined,
+			}
 		case 'Google':
-			return createGoogleGenerativeAI({ apiKey })(model.name, {
-				useSearchGrounding,
-			})
+			const google = createGoogleGenerativeAI({ apiKey })
+			return {
+				model: google(model.name),
+				tools: useSearchGrounding
+					? { webSearch: google.tools.googleSearch({}) }
+					: undefined,
+			}
 		case 'Anthropic':
-			return createAnthropic({ apiKey })(model.name)
+			const anthropic = createAnthropic({ apiKey })
+			return {
+				model: anthropic(model.name),
+				tools: { webSearch: anthropic.tools.webSearch_20250305() },
+			}
 	}
 }
 
@@ -47,30 +61,25 @@ export async function generateResponse({
 	maxSentences: number | null
 	grounding: boolean
 	onStepFinish: (usage: {
-		inputTokens: number | null
-		outputTokens: number | null
+		inputTokens: number | undefined
+		outputTokens: number | undefined
 	}) => void
 	onChunk: (chunk: string) => Promise<void>
 }) {
 	return new Promise<void>(async (resolve, reject) => {
 		try {
 			const systemPrompt = 'You are a friendly assistant!'
+			const { model: modelObject, tools } = getModel(model, grounding)
+
 			const result = streamText({
-				model: getModel(model, grounding),
+				model: modelObject,
 				system: maxSentences
 					? systemPrompt + ` You will respond in ${maxSentences} sentences.`
 					: systemPrompt,
 				messages,
 				seed: getSeed(),
-				onStepFinish: ({ usage }) =>
-					onStepFinish({
-						inputTokens: usage.promptTokens ?? null,
-						outputTokens: usage.completionTokens ?? null,
-					}),
-				onFinish: ({ usage, providerMetadata }) => {
-					console.log('usage', usage)
-					console.log('providerMetadata', providerMetadata)
-				},
+				onStepFinish: ({ usage }) => onStepFinish(usage),
+				tools,
 			})
 
 			for await (const chunk of result.textStream) {
@@ -92,7 +101,7 @@ export async function expectsImage({
 }): Promise<boolean> {
 	if (!model.capabilities.has('image-output')) return false
 	return generateText({
-		model: getModel(model, false),
+		model: getModel(model, false).model,
 		system:
 			"You are a helpful assistant that can determine if a message expects an image. If it does, return 'true'. If it doesn't, return 'false'. If you are not sure, return 'false'.",
 		prompt,
@@ -101,7 +110,8 @@ export async function expectsImage({
 
 export async function generateTitle({ message }: { message: string }) {
 	return generateText({
-		model: getModel(MODELS.find(m => m.name === titleModel.value)!, false),
+		model: getModel(MODELS.find(m => m.name === titleModel.value)!, false)
+			.model,
 		system:
 			"Generate a short, descriptive title (max 5 words) for this conversation based on the user's first message. The title should capture the main topic or purpose of the discussion.",
 		messages: [{ role: 'user', content: message }],
