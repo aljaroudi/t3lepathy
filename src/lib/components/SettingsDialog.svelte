@@ -42,10 +42,6 @@
 				<label for={`apiKey-${provider}`} class="flex items-center gap-2">
 					<ProviderLogo {provider} />
 					<span class="text-sm font-light">{provider}</span>
-					<!-- usage -->
-					<span class="ml-auto text-xs text-gray-500">
-						{apiKeys.value[provider]?.length || 0} / 100
-					</span>
 				</label>
 				<input
 					type="text"
