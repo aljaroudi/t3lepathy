@@ -47,7 +47,10 @@ export async function addMessage(
 	// 2. Get all messages for context
 	const history = ui.messages.map(m =>
 		m.role === 'assistant'
-			? { role: 'assistant' as const, content: m.content }
+			? {
+					role: 'assistant' as const,
+					content: m.content.filter(part => part.type !== 'image'),
+				}
 			: { role: 'user' as const, content: m.content }
 	)
 

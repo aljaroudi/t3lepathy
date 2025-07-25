@@ -16,7 +16,7 @@ export type UserContextMessage = {
 }
 export type LLMContextMessage = {
 	role: 'assistant'
-	content: Array<TextPart | ImagePart>
+	content: Array<TextPart | ImagePart | FilePart | ReasoningPart>
 }
 export type ContextMessage = UserContextMessage | LLMContextMessage
 
@@ -27,8 +27,8 @@ type MessageBase = {
 	tokens: number | null
 	model: Model['name']
 }
-type UserMessage = ContextMessage & MessageBase
-type LLMMessage = ContextMessage & MessageBase
+type UserMessage = UserContextMessage & MessageBase
+type LLMMessage = LLMContextMessage & MessageBase
 export type Message = UserMessage | LLMMessage
 
 type ApiKey = {
@@ -90,3 +90,9 @@ type Provider = Model['provider']
 type ResponseLength = 'short' | 'medium' | 'open'
 
 type JsonValue = string | number | boolean | Record | null
+
+// AI SDK types
+type ReasoningPart = {
+	type: 'reasoning'
+	text: string
+}

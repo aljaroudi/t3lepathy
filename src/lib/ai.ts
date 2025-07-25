@@ -2,11 +2,12 @@ import {
 	generateText,
 	streamText,
 	experimental_generateImage as generateImage,
+	type CoreMessage,
 } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createAnthropic } from '@ai-sdk/anthropic'
-import type { ContextMessage, Message, Model, Provider } from './types'
+import type { Message, Model, Provider, UserMessage } from './types'
 import { apiKeys, titleModel } from './state.svelte'
 
 function getModel(model: Model, useSearchGrounding: boolean) {
@@ -41,7 +42,7 @@ export async function generateResponse({
 	onStepFinish,
 	onChunk,
 }: {
-	messages: ContextMessage[]
+	messages: CoreMessage[]
 	model: Model
 	maxSentences: number | null
 	grounding: boolean
@@ -59,7 +60,6 @@ export async function generateResponse({
 				system: maxSentences
 					? systemPrompt + ` You will respond in ${maxSentences} sentences.`
 					: systemPrompt,
-				// @ts-expect-error - TODO: update types
 				messages,
 				seed: getSeed(),
 				onStepFinish: ({ usage }) =>
@@ -83,7 +83,7 @@ export async function expectsImage({
 	message,
 	model,
 }: {
-	message: ContextMessage
+	message: UserMessage
 	model: Model
 }): Promise<boolean> {
 	if (!model.capabilities.has('image-output')) return false
