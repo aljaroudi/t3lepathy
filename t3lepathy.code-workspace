@@ -1,0 +1,32 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Root",
+    },
+    {
+      "path": "apps/web",
+      "name": "Web: Svelte",
+    },
+    {
+      "path": "apps/mobile",
+      "name": "Mobile: Expo",
+    },
+    {
+      "path": "packages/shared",
+      "name": "Shared",
+    },
+  ],
+  "settings": {
+    "css.lint.unknownAtRules": "ignore",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.sortMembers": "explicit",
+    },
+  },
+  "extensions": {
+    "recommendations": ["esbenp.prettier-vscode"],
+  },
+}
