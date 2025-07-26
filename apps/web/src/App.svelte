@@ -1,6 +1,6 @@
 <script lang="ts">
 	import 'highlight.js/styles/atom-one-dark.min.css'
-	import { getFileTypes, MODELS, PROVIDERS } from './lib/ai'
+	import { getFileTypes, MODELS, PROVIDERS } from 'shared'
 	import {
 		ui,
 		currentModelId,

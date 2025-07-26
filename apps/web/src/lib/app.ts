@@ -1,7 +1,14 @@
-import { ui, responseLength } from './state.svelte'
+import { ui, responseLength, titleModel, apiKeys } from './state.svelte'
 import * as db from './db'
-import type { LLMMessage, Message, Model, ResponseLength, UUID } from './types'
-import { expectsImage, generateResponse, generateTitle, genImage } from './ai'
+import type { LLMMessage, Message, ResponseLength, UUID } from './types'
+import {
+	expectsImage,
+	generateResponse,
+	generateTitle,
+	genImage,
+	MODELS,
+	type Model,
+} from 'shared'
 
 export async function setCurrentChat(id: UUID) {
 	const messages = await db.getMessages(id)
@@ -42,6 +49,8 @@ export async function addMessage(
 	model: Model,
 	grounding: boolean
 ) {
+	const apiKey = apiKeys.value[model.provider]
+	if (!apiKey.length) throw new Error('API key not found')
 	// 0. Check if chat exists
 	if (!(await db.chatExists(msg.chatId))) {
 		await addChat('New chat', msg.chatId)
@@ -52,7 +61,7 @@ export async function addMessage(
 	if (!txtPart) return
 	const shouldAutoRename = ui.messages.length === 0
 	const titlePromise = shouldAutoRename
-		? generateTitle({ message: txtPart })
+		? generateTitle({ message: txtPart, ...getTitleModel() })
 		: null
 
 	await db.handleNewMessage(msg)
@@ -83,9 +92,9 @@ export async function addMessage(
 	const msgIdx = ui.handleNewMessage(reply)
 
 	// 4. Requested an image?
-	const imageRequested = await expectsImage({ prompt: txtPart, model })
+	const imageRequested = await expectsImage({ prompt: txtPart, model, apiKey })
 	if (imageRequested) {
-		const { image } = await genImage({ message: txtPart })
+		const { image } = await genImage({ message: txtPart, apiKey })
 		const { message } = ui.addContent(msgIdx, {
 			type: 'image',
 			image: `data:${image.mediaType};base64,${image.base64}`,
@@ -110,6 +119,7 @@ export async function addMessage(
 				// @ts-expect-error - we know it's a text part
 				ui.messages[msgIdx].content[contentIdx].text += chunk
 			},
+			apiKey,
 		})
 		await db.handleUpdateMessage(ui.messages[msgIdx])
 	}
@@ -124,4 +134,13 @@ const LENGTH_IN_SENTENCES: Record<ResponseLength, number | null> = {
 	short: 3,
 	medium: 10,
 	open: null,
+}
+
+function getTitleModel() {
+	const titleModelId = titleModel.value
+	const model = MODELS.find(m => m.name === titleModelId)
+	if (!model) throw new Error('Title model not found')
+	const apiKey = apiKeys.value[model.provider]
+	if (!apiKey) throw new Error('API key not found')
+	return { model, apiKey }
 }
