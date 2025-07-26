@@ -25,6 +25,14 @@
       "source.fixAll": "explicit",
       "source.sortMembers": "explicit",
     },
+    "files.readonlyInclude": {
+      "node_modules/**": true,
+    },
+    "explorer.fileNesting.patterns": {
+      ".env": ".env.*",
+      "package.json": "pnpm-lock.yaml",
+      "prettier.config*": ".prettierignore",
+    },
   },
   "extensions": {
     "recommendations": ["esbenp.prettier-vscode"],
