@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "build:web": "pnpm --filter web build",
+    "dev:mobile": "pnpm --filter mobile dev",
+    "build:mobile": "pnpm --filter mobile build"
+  }
+}
