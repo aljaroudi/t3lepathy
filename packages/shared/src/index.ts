@@ -34,7 +34,9 @@ function getModel(model: Model, apiKey: string, useSearchGrounding: boolean) {
       const anthropic = createAnthropic({ apiKey })
       return {
         model: anthropic(model.name),
-        tools: { webSearch: anthropic.tools.webSearch_20250305() },
+        tools: useSearchGrounding
+          ? { webSearch: anthropic.tools.webSearch_20250305() }
+          : undefined,
       }
   }
 }
