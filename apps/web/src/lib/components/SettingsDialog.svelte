@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { AlertTriangleIcon } from '@lucide/svelte'
-	import { MODELS, PROVIDERS } from '../ai'
+	import { MODELS, PROVIDERS } from 'shared'
 	import { apiKeys, systemPrompt, titleModel } from '../state.svelte'
 	import { isValidApiKey } from '../validate'
 	import * as Select from './ui/select/index'

@@ -1,5 +1,5 @@
-import type { ImagePart, TextPart } from 'ai'
-import type { Chat, Message, Model, Provider, ResponseLength } from './types'
+import type { Chat, Message, ResponseLength } from './types'
+import type { ImagePart, TextPart, Model, Provider } from 'shared'
 import { persistedState } from './persisted-state.svelte'
 
 export const ui = createState()

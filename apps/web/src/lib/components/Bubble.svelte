@@ -1,9 +1,8 @@
 <script lang="ts">
-	import type { TextPart } from 'ai'
+	import { getPrice, type TextPart } from 'shared'
 	import type { Message } from '../types'
 	import { marked } from './markdown'
 	import { cn } from '../utils'
-	import { getPrice } from '../ai'
 	import ClipboardButton from './ClipboardButton.svelte'
 
 	let { message, loading }: { message: Message; loading: boolean } = $props()

@@ -1,0 +1,47 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Root",
+    },
+    {
+      "path": "apps/web",
+      "name": "Web: Svelte",
+    },
+    {
+      "path": "apps/mobile",
+      "name": "Mobile: Expo",
+    },
+    {
+      "path": "packages/shared",
+      "name": "Shared",
+    },
+  ],
+  "settings": {
+    "css.lint.unknownAtRules": "ignore",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.sortMembers": "explicit",
+    },
+    "files.readonlyInclude": {
+      "node_modules/**": true,
+    },
+    "explorer.fileNesting.patterns": {
+      ".env": ".env.*",
+      "package.json": "pnpm-lock.yaml",
+      "prettier.config*": ".prettierignore",
+    },
+    "yaml.maxItemsComputed": 500,
+    "files.exclude": {
+      ".{next,expo}": true,
+      "node_modules": true,
+    },
+    "prettier.requireConfig": true,
+    "prettier.useEditorConfig": false,
+  },
+  "extensions": {
+    "recommendations": ["esbenp.prettier-vscode", "heybourn.headwind"],
+  },
+}

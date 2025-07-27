@@ -1,0 +1,12 @@
+{
+	"editor.codeActionsOnSave": {
+		"source.fixAll": "explicit",
+		"source.organizeImports": "explicit",
+		"source.sortMembers": "explicit"
+	},
+	"explorer.fileNesting.patterns": {
+		"app.config.ts": "babel.config.js, eas.json, metro.config.js, expo-env.d.ts",
+		"tailwind.config.js": "nativewind-env.d.ts, global.css",
+		"eslint.config.js": "prettier.config.js"
+	}
+}
