@@ -5,9 +5,8 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:web": "pnpm --filter web dev",
-    "build:web": "pnpm --filter web build",
-    "dev:mobile": "pnpm --filter mobile dev",
-    "build:mobile": "pnpm --filter mobile build"
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "dev:mobile": "pnpm --filter t3lepathy-app start"
   }
 }
